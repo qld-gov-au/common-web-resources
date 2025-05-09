@@ -1,0 +1,41 @@
+---
+title: Data search widget
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  {# <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css"> #}
+  <link rel="stylesheet" href="/css/data-search-widget.css">
+  <link rel="stylesheet" href="/css/layout.css">
+
+  {% if head_css.length %}
+    {% for cssfile in head_css.split(', ') %}
+      <link rel="stylesheet" href="{{ cssfile | safe }}">
+    {% endfor %}
+  {% endif %}
+
+  <script src="/node_modules/jquery/dist/jquery.min.js"></script>
+  <script src="/data-search-widget.js"></script>
+  {% if head_js.length %}
+    {% for jsfile in head_js.split(', ') %}
+      <script src="{{ jsfile | safe }}"></script>
+    {% endfor %}
+  {% endif %}
+
+</head>
+<body>
+  {{ content | safe }}
+
+  <div id="footer-scripts">
+    <script src="/node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    {% if footer_js.length %}
+      {% for jsfile in footer_js.split(', ') %}
+        <script src="{{ jsfile | safe }}"></script>
+      {% endfor %}
+    {% endif %}
+  </div>
+</body>
+</html>

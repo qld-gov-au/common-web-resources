@@ -1,0 +1,15 @@
+@import '../node_modules/bootstrap/scss/bootstrap.scss';
+
+.qg-card {
+  @extend .card;
+  width: 100%;
+}
+
+.qg-card.qg-card__clickable {
+  box-shadow: 0px 2px 4px #333;
+  transition: box-shadow .2s;
+
+  &:hover, &:focus, &:active {
+    box-shadow: none;
+  }
+}

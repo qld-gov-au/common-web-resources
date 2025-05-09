@@ -1,0 +1,22 @@
+{
+  "name": "csv-search-widget",
+  "version": "1.0.0",
+  "description": "",
+  "main": "data-search-widget.js",
+  "scripts": {
+    "serve": "npx @11ty/eleventy --serve",
+    "scss": "sass --watch scss:css",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@11ty/eleventy": "^2.0.1",
+    "sass": "^1.87.0"
+  },
+  "dependencies": {
+    "bootstrap": "^4.6.2",
+    "jquery": "^3.7.0"
+  }
+}
