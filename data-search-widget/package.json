@@ -16,7 +16,7 @@
     "sass": "^1.87.0"
   },
   "dependencies": {
-    "bootstrap": "^4.6.2",
+    "bootstrap": "^5.0.0",
     "jquery": "^3.7.0"
   }
 }
