@@ -267,6 +267,9 @@
             case 'select':
               input = searchTool.build.filterType.select(data, name, settings, parent, changed)
               break
+            case 'text':
+              input = searchTool.build.filterType.text(data, name, settings)
+              break
             // TODO: any other filter types?
           }
 
@@ -492,8 +495,8 @@
               // are checked against conditional value/s.
             }
             else {
-              // If no default option is specified, add a placeholder option.
-              if (!settings.default) {
+              // If no default option is specified (null or false), add a placeholder option.
+              if (settings.default === null || settings.default === false) {
                 const optionText = settings.defaultText || name,
                   defaultText = `—Select a${$.inArray(optionText.slice(0, 1), ['a', 'e', 'i', 'o', 'u']) > -1 ? 'n ' : ' '}${optionText}—`,
                   defaultOption = $('<option selected value>').text(defaultText)
@@ -526,6 +529,21 @@
             }
             return false
           },
+          // Build a text INPUT element for the filter.
+          text: function (data, name, settings) {
+            var input = $('<input>').attr({
+              type: 'text',
+              id: name + '-filter',
+              name: name,
+              class: 'form-control',
+              placeholder: settings.placeholder || ''
+            })
+            if (settings.required) {
+              input.attr('required', true)
+            }
+            return input
+          },
+
         },
         results: function () {
           return $('<div>').addClass('results row row-cols-1 g-4')
@@ -578,12 +596,17 @@
               searchTool.template.paginate(data)
             }
           },
-          filterItems: function (items) {
+          filterItems: async function (items) {
             var context = '#' + uniqueId
             var keywords = $('.search-keywords').val() || ''
             var filters = $('input:not(.search-keywords):not([type=checkbox]):not([type=radio]), select:not([multiple]), input[type=radio]:checked', context)
             var multiFilters = $('.form-checkboxes, select[multiple]', context)
+            var locationSearch = $('#locationSearch-filter').val() || '';
+            var distanceRadius = parseFloat($('#distanceRadius-filter').val() || '');
+            var locationSuburb = '';
+            var locationPostcode = '';
             var results = []
+            var errorMessage = "We couldn't find any matching results.";
             var fieldsArray = searchTool.flatFilterFields
 
             // Filter out empty entries and extract only the properties needed for filtering.
@@ -637,6 +660,83 @@
               filteredItems = items
             }
 
+            // Location search and distance radius
+            //   When distanceRadius is NOT set,
+            //      match suburb / postcode based on item.outlet_postcode or item.outlet_suburb
+            //   When distanceRadius is set,
+            //      match item.latitude and item.longitude to the locationSearch lat/lon
+            if (locationSearch) {
+              if (locationSearch.match(/^\d{4}$/)) {
+                locationPostcode = locationSearch;
+              } else {
+                locationSuburb = locationSearch;
+              }
+
+              if (!distanceRadius) {
+
+                // String matching item's suburb or postcode with user input.
+                var filteredByLocation = items.filter(function (item) {
+                  if (!item.outletPostcode && !item.outletSuburb) return false;
+
+                  // Postcode - If input value is a 4 digit number, check if it matches item.outletPostcode
+                  if (locationPostcode) {
+                    return item.outletPostcode && item.outletPostcode.toString().includes(locationPostcode);
+
+                  // Suburb - check if input value matches item.outletSuburb
+                  } else {
+                    return item.outletSuburb && item.outletSuburb.toLowerCase().includes(locationSuburb.toLowerCase());
+                  }
+                });
+
+                // Set filter results to filteredByLocation if any results are found
+                if (filteredByLocation.length) {
+                  results = filteredByLocation;
+                }
+
+              // If distanceRadius is set, filter by latitude and longitude.
+              } else if (distanceRadius > 0) {
+
+                await (async function () {
+                  try {
+                    const response = await getLatLonCKAN(locationSuburb, locationPostcode);
+
+                    // Check if the response contains valid latitude and longitude
+                    if (response && response.lat && response.lon) {
+                      const lat = parseFloat(response.lat);
+                      const lon = parseFloat(response.lon);
+
+                      const filteredByDistance = items
+                      .filter(function (item) {
+                        if (!item.latitude || !item.longitude) return false;
+                        const itemLat = parseFloat(item.latitude);
+                        const itemLon = parseFloat(item.longitude);
+
+                        // Calculate the distance using the haversine formula
+                        const distance = haversineDistance([lat, lon], [itemLat, itemLon]);
+
+                        item.distance = distance; // Add distance to item for sorting
+                        return distance <= distanceRadius;
+                      })
+                      .sort(function (a, b) {
+                        return a.distance - b.distance; // Sort by distance
+                      });
+
+                      // Set filter results to filteredByDistance if any results are found
+                      if (filteredByDistance.length) {
+                        results = filteredByDistance;
+                      }
+                    } else {
+                      errorMessage = "Unable to find location. Please try again.";
+                    }
+                  } catch (error) {
+                    console.error('Error fetching location data:', error);
+                    errorMessage = "An error occurred while fetching location data.";
+                  }
+                })(); // Ensure this is awaited
+              };
+            }
+
+            // Keyword search.
             if (keywords.length) {
               if (keywords.indexOf(' ')) {
                 var terms = keywords.split(' ')
@@ -648,8 +748,7 @@
               else {
                 keywords = new RegExp(keywords, 'i')
               }
-
-              var results = filteredItems.filter(function (item) {
+              results = filteredItems.filter(function (item) {
                 var searchFields = $.map(config.keywordFields, function (field) {
                   return item[field]
                 }).join(' ')
@@ -657,7 +756,7 @@
                 return keywords.test(searchFields)
               })
             }
-            else {
+            else if (filteredItems.length > 0) {
               results = filteredItems
             }
 
@@ -666,15 +765,15 @@
               results = config.filterCallback(results)
             }
 
-            $('.results').empty()
+            // Display filtered results
+            $('.results').empty() // Clear previous results
             if (results.length) {
               searchTool.template.paginate(results)
-            }
-            else {
+            } else {
               $('.results').append(
                 '<div id="no-results">' +
                 '<h3>No results found</h3>' +
-                '<p>We couldn\'t find any matching results.</p>' +
+                '<p>' + errorMessage + '</p>' +
                 '</div>')
               $('.page-summary, .pager').hide()
             }
