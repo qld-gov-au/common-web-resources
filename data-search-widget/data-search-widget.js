@@ -690,7 +690,7 @@
 
                 // Set filter results to filteredByLocation if any results are found
                 if (filteredByLocation.length) {
-                  results = filteredByLocation;
+                  filteredItems = filteredByLocation;
                 }
 
               // If distanceRadius is set, filter by latitude and longitude.
@@ -723,7 +723,7 @@
 
                       // Set filter results to filteredByDistance if any results are found
                       if (filteredByDistance.length) {
-                        results = filteredByDistance;
+                        filteredItems = filteredByDistance;
                       }
                     } else {
                       errorMessage = "Unable to find location. Please try again.";
