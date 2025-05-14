@@ -81,6 +81,19 @@
 
             // Standardise data keys to camel case.
             data = searchTool.helpers.standardiseKeys(data)
+            globalData = data;
+
+            if (config.maps) {
+              $('#search-widget-maps').css("height", "400px");
+              for (i=0; i<leafletCss.length; i++) {
+                addLeafletCSS(leafletCss[i]);
+              }
+              getScriptArray(leafletScripts);
+              for (i = 0; i < leafletScripts.length; i ++) {
+                loadScript(leafletScripts[i], scriptLoaded);
+              }
+            }
+
             // Add flattened version of filter fields to searchTool.
             searchTool.flatFilterFields = []
             searchTool.helpers.flattenFields(config.filterFields, searchTool.flatFilterFields)
@@ -229,6 +242,11 @@
             var kwInput = $('<input>').addClass('form-control form-text search-keywords').attr({ id: 'keywords-filter', type: 'text' })
             kwFieldset.append(kwLabel, kwInput)
             form.append(kwFieldset)
+          }
+
+          if (!config.maps) {
+            var maps = $('#search-widget-maps')
+            maps.hide();
           }
 
           if (config.filterFields) {
@@ -994,5 +1012,123 @@
     callback: function (data, searchTool) { }, // Additional processing at the end of build.
     resultsCallback: function (results) { }, // Additional processing after results are rendered. Useful for attaching events to elements in result markup.
     dataCallback: function (data) { return data } // Run additional function from configuration to prepare or select data.
+  }
+
+  var leafletCss = [ 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css',
+                    'https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css',
+                    'https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css',
+  ];
+  var leafletScripts = [ //'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js',
+                        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+                        'https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster-src.js',
+                        'https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.js',
+                        //'https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js',
+                        //'https://cdnjs.cloudflare.com/ajax/libs/esri-leaflet/3.1.0/esri-leaflet.js',
+                        'https://cdnjs.cloudflare.com/ajax/libs/esri-leaflet/3.0.10/esri-leaflet.js',
+                        //'https://cdn.jsdelivr.net/npm/esri-leaflet-vector@4.2.8/dist/esri-leaflet-vector.js',
+                        //'https://unpkg.com/esri-leaflet-vector@4.2.8/dist/esri-leaflet-vector.js',
+                        'https://unpkg.com/esri-leaflet-vector@4.1.0/dist/esri-leaflet-vector.js',
+                        'https://unpkg.com/leaflet.tilelayer.fallback@1.0.4/dist/leaflet.tilelayer.fallback.js'
+  ];
+
+  let scriptsLoaded = 0;
+  let globalData;
+  const totalScripts = leafletScripts.length;
+
+  function loadScript(src, callback) {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = callback;
+    document.head.appendChild(script);
+  }
+  function scriptLoaded() {
+    scriptsLoaded++;
+    if (scriptsLoaded === totalScripts) {
+      initMap(globalData);
+    }
+  }
+
+  function addLeafletCSS(src) {
+    $('<link>', {
+      rel: 'stylesheet',
+      type: 'text/css',
+      href: src
+    }).appendTo('head');
+
+  }
+  function getScriptArray(arr, i) {
+    i = i || 0;
+    jQuery.getScript(arr[i], function() {
+      i++;
+      arr.length > i && getScriptArray(arr, i);
+    });
+  }
+
+  function initMap(mapsData) {
+    let mapEle = document.getElementById('search-widget-maps');
+    let controlsPosition = mapEle.getAttribute('data-controlsPosition');
+    let gridSize = 30;
+    let markers = {};
+    let center
+    let zoom;
+
+    center = mapEle.getAttribute('data-center') && mapEle.getAttribute('data-center').split(',') || '-23,143'.split(',');
+    zoom = 5;
+
+    let frontLayer =  L.esri.Vector.vectorTileLayer('https://spatial.information.qld.gov.au/arcgis/rest/services/Hosted/Basemaps_QldBase_Pastel/VectorTileServer', {
+        minZoom: 4,
+        maxZoom: 21,
+        attribution: '©State of Queensland (Department of Natural Resources and Mines, Manufacturing, and Regional and Rural Development) 2025',
+    });
+    let map = L.map('search-widget-maps', { center: center, zoom: zoom, layers: frontLayer, zoomControl: false });
+    map.createPane('background');
+    map.getPane('background').style.zIndex = -100;
+    L.tileLayer.fallback('https://services.ga.gov.au/gis/rest/services/NationalBaseMap_GreyScale/MapServer/WMTS/tile/1.0.0/NationalBaseMap_GreyScale/default/GoogleMapsCompatible/{z}/{y}/{x}.png', {
+        attribution: '©Commonwealth of Australia (Geoscience Australia)',
+        maxZoom: 16,
+        pane: 'background',
+    }).addTo(map);
+    map.attributionControl.setPrefix('Leaflet');
+
+    // Leaflet has no equivalent to the centre right and centre left positions so this just sets them to whichever available spot is empty
+    if (controlsPosition === "RIGHT_BOTTOM") controlsPosition = "bottomright";
+    else if (controlsPosition === "RIGHT_CENTER") controlsPosition = "bottomright";
+    else if (controlsPosition === "RIGHT_TOP") controlsPosition = "topright";
+    else if (controlsPosition === "LEFT_BOTTOM") controlsPosition = "bottomleft";
+    else if (controlsPosition === "LEFT_CENTER") controlsPosition = "bottomleft";
+    else if (controlsPosition === "LEFT_TOP") controlsPosition = "topleft";
+    else if (!["bottomright", "topright", "bottomleft", "topleft"].includes(controlsPosition)) controlsPosition = "bottomright";
+
+    L.control.zoom({ position: controlsPosition }).addTo(map);
+    L.control
+        .scale({
+            imperial: false,
+            metric: true,
+            position: "topright",
+        })
+        .addTo(map);
+
+    let markerClusters = L.markerClusterGroup({
+        showCoverageOnHover: false,
+        animateAddingMarkers: true,
+        maxClusterRadius: gridSize,
+    });
+    $.each(mapsData, function (key, item) {
+      if (item.latitude != "(blank)" && item.longitude != "(blank)") {
+          var latlong = item.latitude + ',' + item.longitude;
+          // put it on the map?
+          if (!item.latitude) {
+              return;
+          }
+          if (!markers[latlong]) {
+              // add marker to map
+              markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
+              markers[latlong].bindPopup(item.outletName);
+              markerClusters.addLayer(markers[latlong]);
+          }
+      }
+    });
+    //markerClusters.on('clusterclick', function (a) { alert('Cluster Clicked'); });
+    map.addLayer(markerClusters);
   }
 })(jQuery)
