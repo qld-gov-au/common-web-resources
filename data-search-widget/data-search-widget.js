@@ -81,17 +81,18 @@
 
             // Standardise data keys to camel case.
             data = searchTool.helpers.standardiseKeys(data)
-            globalData = data;
 
             if (config.maps) {
               $('#search-widget-maps').css("height", "400px");
-              for (i=0; i<leafletCss.length; i++) {
+              initMap(data);
+              /*for (i = 0; i < leafletCss.length; i ++) {
                 addLeafletCSS(leafletCss[i]);
+                //loadCss(leafletCss[i], scriptLoaded)
               }
               getScriptArray(leafletScripts);
               for (i = 0; i < leafletScripts.length; i ++) {
                 loadScript(leafletScripts[i], scriptLoaded);
-              }
+              }*/
             }
 
             // Add flattened version of filter fields to searchTool.
@@ -191,6 +192,7 @@
             }
 
             // Return data for other deferred functions to use.
+            globalData = data;
             return data
           }) // $.getScript(scripts.csv).then()
             .then(function (data) {
@@ -595,6 +597,9 @@
             else {
               searchTool.template.paginate(data)
             }
+            //when reset
+            clearMarkers();
+            regenerateMap(globalData);
           },
           filterItems: function (items) {
             var context = '#' + uniqueId
@@ -683,6 +688,10 @@
             if (config.filterCallback.length) {
               results = config.filterCallback(results)
             }
+
+            clearMarkers();
+            // add layers
+            regenerateMap(results);
 
             $('.results').empty()
             if (results.length) {
@@ -1020,8 +1029,9 @@
   ];
   var leafletScripts = [ //'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js',
                         'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
-                        'https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster-src.js',
-                        'https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.js',
+                        //'https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster-src.js',
+                        //'https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.js',
+                        'https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js',
                         //'https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js',
                         //'https://cdnjs.cloudflare.com/ajax/libs/esri-leaflet/3.1.0/esri-leaflet.js',
                         'https://cdnjs.cloudflare.com/ajax/libs/esri-leaflet/3.0.10/esri-leaflet.js',
@@ -1032,8 +1042,12 @@
   ];
 
   let scriptsLoaded = 0;
+  let cssLoaded = 0;
   let globalData;
+  let map;
+  let globalClusters;
   const totalScripts = leafletScripts.length;
+  const totalCss = leafletCss.length;
 
   function loadScript(src, callback) {
     const script = document.createElement('script');
@@ -1041,9 +1055,20 @@
     script.onload = callback;
     document.head.appendChild(script);
   }
+  function loadCss(src, callback) {
+    const link = document.createElement('link');
+    link.src = src;
+    link.rel = "stylesheet";
+    link.type = "text/css";
+    link.onload = callback;
+    document.head.appendChild(link);
+  }
   function scriptLoaded() {
     scriptsLoaded++;
-    if (scriptsLoaded === totalScripts) {
+    cssLoaded ++;
+    if ((scriptsLoaded === totalScripts) && (cssLoaded === totalCss)
+    ) {
+      //setTimeout(initMap(globalData), 1000)
       initMap(globalData);
     }
   }
@@ -1080,7 +1105,7 @@
         maxZoom: 21,
         attribution: '©State of Queensland (Department of Natural Resources and Mines, Manufacturing, and Regional and Rural Development) 2025',
     });
-    let map = L.map('search-widget-maps', { center: center, zoom: zoom, layers: frontLayer, zoomControl: false });
+    map = L.map('search-widget-maps', { center: center, zoom: zoom, layers: frontLayer, zoomControl: false });
     map.createPane('background');
     map.getPane('background').style.zIndex = -100;
     L.tileLayer.fallback('https://services.ga.gov.au/gis/rest/services/NationalBaseMap_GreyScale/MapServer/WMTS/tile/1.0.0/NationalBaseMap_GreyScale/default/GoogleMapsCompatible/{z}/{y}/{x}.png', {
@@ -1115,11 +1140,11 @@
     });
     $.each(mapsData, function (key, item) {
       if (item.latitude != "(blank)" && item.longitude != "(blank)") {
-          var latlong = item.latitude + ',' + item.longitude;
-          // put it on the map?
-          if (!item.latitude) {
-              return;
-          }
+        // put it on the map?
+        if (!item.latitude) {
+          return;
+        }
+        var latlong = item.latitude + ',' + item.longitude;
           if (!markers[latlong]) {
               // add marker to map
               markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
@@ -1128,7 +1153,42 @@
           }
       }
     });
-    //markerClusters.on('clusterclick', function (a) { alert('Cluster Clicked'); });
+    //map.addLayer(markerClusters);
+    markerClusters.addTo(map);
+    globalClusters = markerClusters;
+  }
+
+  function clearMarkers() {
+    // clear map layers
+    globalClusters.clearLayers();
+  }
+
+  function regenerateMap(mapsData) {
+    let markers = {};
+    let markerClusters = L.markerClusterGroup(
+      {
+        showCoverageOnHover: false,
+        animateAddingMarkers: true,
+        maxClusterRadius: 30,
+    }
+    );
+    $.each(mapsData, function (key, item) {
+      if (item.latitude != "(blank)" && item.longitude != "(blank)") {
+        // put it on the map?
+        if (!item.latitude) {
+          return;
+        }
+        var latlong = item.latitude + ',' + item.longitude;
+          if (!markers[latlong]) {
+              // add marker to map
+              markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
+              markers[latlong].bindPopup(item.outletName);
+              markerClusters.addLayer(markers[latlong]);
+          }
+      }
+    });
     map.addLayer(markerClusters);
+    //markerClusters.addTo(map); // they work the same
+    globalClusters = markerClusters;
   }
 })(jQuery)
