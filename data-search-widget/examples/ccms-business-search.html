@@ -17,7 +17,6 @@
     </style>
 
     <script src="/node_modules/jquery/dist/jquery.min.js"></script>
-    <script src="/node_modules/jquery-ui/dist/jquery-ui.min.js"></script>
     <script src="/node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="/data-search-widget.js"></script>
     <script src="/utils/helpers.js"></script>
@@ -94,19 +93,18 @@
                     'website',
                     'discount',
                 ],
-                filterFields: {
-                    locationSearch: {
-                        label: 'Suburb / Postcode',
-                        type: 'text',
-                        customInput: true,
+                locationSearch: {
+                    enabled: true,
+                    label: 'Suburb or postcode',
+                    matchFields: {
+                        suburb: 'outletSuburb',
+                        postcode: 'outletPostcode'
                     },
-                    distanceRadius: {
-                        label: 'Distance Around',
-                        type: 'select',
-                        options: ['', '5', '10', '15', '20'],
-                        default: '5',  //DEBUG, default is ''
-                        sort: false
-                    },
+                    distanceEnabled: true,
+                    distanceInput: {
+                        label: 'Distance Around (km)',
+                        default: 5,
+                    }
                 },
                 resultTemplate: {
                     data: function (results) {

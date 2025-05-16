@@ -231,6 +231,31 @@
             form.append(kwFieldset)
           }
 
+          if (config.locationSearch?.enabled) {
+            // Add location search field, distance radius, and location typeahead
+            var locationField = searchTool.build.inputField({
+              id: 'locationSearch',
+              label: config.locationSearch?.label || 'Suburb / Postcode',
+              type: 'text',
+              defaultValue: config.locationSearch?.defaultValue || ''
+            })
+
+            form.append(locationField);
+
+            if (config.locationSearch.distanceEnabled) {
+              var distanceField = searchTool.build.inputField({
+                id: 'distanceRadius',
+                label: config.locationSearch.distanceInput?.label || 'Distance Around',
+                type: 'select',
+                options: config.locationSearch.radiusOptions || [5, 10, 15, 20],
+                defaultValue: config.locationSearch.radiusDefault || 5
+              });
+
+              form.append(distanceField);
+            }
+          }
+
+
           if (config.filterFields) {
             var filtersContainer = $('<fieldset>').attr('id', 'filters')
             form.append(filtersContainer)
@@ -266,9 +291,6 @@
               break
             case 'select':
               input = searchTool.build.filterType.select(data, name, settings, parent, changed)
-              break
-            case 'text':
-              input = searchTool.build.filterType.text(data, name, settings)
               break
             // TODO: any other filter types?
           }
@@ -523,27 +545,12 @@
 
                 return element
               })
-
               select.append(template)
+              console.log('select :>> ', select);
               return select
             }
             return false
-          },
-          // Build a text INPUT element for the filter.
-          text: function (data, name, settings) {
-            var input = $('<input>').attr({
-              type: 'text',
-              id: name + '-filter',
-              name: name,
-              class: 'form-control',
-              placeholder: settings.placeholder || ''
-            })
-            if (settings.required) {
-              input.attr('required', true)
-            }
-            return input
-          },
-
+          }
         },
         results: function () {
           return $('<div>').addClass('results row row-cols-1 g-4')
@@ -553,6 +560,36 @@
         },
         pageSummary: function () {
           return $('<div>').addClass('page-summary').insertBefore('.results')
+        },
+        inputField: function (params) {
+          var id = params.id;
+          var labelText = params.label || id;
+          var type = params.type || 'text';
+          var options = params.options || [];
+          var defaultValue = params.defaultValue || '';
+
+          var fieldset = $('<fieldset>').attr('id', id + '-input').addClass('form-item')
+          var label = $('<label>').attr('for', id + '-filter').text(labelText).addClass('qld-text-input-label')
+
+          var input
+
+          if (type === 'select') {
+            input = $('<select>').attr({ id: id + '-filter', name: id, class: 'form-control' })
+            input.append($('<option selected value="">').text('—Select a ' + labelText + '—'))
+
+            options.forEach(function (option) {
+              var val = option.toString()
+              var opt = $('<option>').val(val).text(val)
+              if (defaultValue && defaultValue.toString() === val) {
+                opt.attr('selected', 'selected')
+              }
+              input.append(opt)
+            })
+          } else {
+            input = $('<input>').attr({ type: type, id: id + '-filter', name: id }).addClass('form-control').val(defaultValue)
+          }
+
+          return fieldset.append(label, input)
         },
       },
       actions: function (data, uniqueId) {
@@ -601,10 +638,6 @@
             var keywords = $('.search-keywords').val() || ''
             var filters = $('input:not(.search-keywords):not([type=checkbox]):not([type=radio]), select:not([multiple]), input[type=radio]:checked', context)
             var multiFilters = $('.form-checkboxes, select[multiple]', context)
-            var locationSearch = $('#locationSearch-filter').val() || '';
-            var distanceRadius = parseFloat($('#distanceRadius-filter').val() || '');
-            var locationSuburb = '';
-            var locationPostcode = '';
             var results = []
             var errorMessage = "We couldn't find any matching results.";
             var fieldsArray = searchTool.flatFilterFields
@@ -664,27 +697,36 @@
             //   When distanceRadius is NOT set,
             //      match suburb / postcode based on item.outlet_postcode or item.outlet_suburb
             //   When distanceRadius is set,
-            //      match item.latitude and item.longitude to the locationSearch lat/lon
-            if (locationSearch) {
-              if (locationSearch.match(/^\d{4}$/)) {
-                locationPostcode = locationSearch;
+            //      match item.latitude and item.longitude to the locationInput lat/lon
+            var locationInput = $('#locationSearch-filter').val() || '';
+            var distanceRadius = parseFloat($('#distanceRadius-filter').val() || '');
+            var locationSuburb = '';
+            var locationPostcode = '';
+
+            if (locationInput) {
+
+              if (locationInput.match(/^\d{4}$/)) {
+                locationPostcode = locationInput;
               } else {
-                locationSuburb = locationSearch;
+                locationSuburb = locationInput;
               }
 
               if (!distanceRadius) {
 
+                var suburbField = config.locationSearch.matchFields.suburb || 'suburb';
+                var postcodeField = config.locationSearch.matchFields.postcode || 'postcode';
+
                 // String matching item's suburb or postcode with user input.
                 var filteredByLocation = items.filter(function (item) {
-                  if (!item.outletPostcode && !item.outletSuburb) return false;
+                  if (!item[suburbField] && !item[postcodeField]) return false;
 
                   // Postcode - If input value is a 4 digit number, check if it matches item.outletPostcode
                   if (locationPostcode) {
-                    return item.outletPostcode && item.outletPostcode.toString().includes(locationPostcode);
+                    return item[postcodeField] && item[postcodeField].toString().includes(locationPostcode);
 
                   // Suburb - check if input value matches item.outletSuburb
                   } else {
-                    return item.outletSuburb && item.outletSuburb.toLowerCase().includes(locationSuburb.toLowerCase());
+                    return item[suburbField] && item[suburbField].toLowerCase().includes(locationSuburb.toLowerCase());
                   }
                 });
 
@@ -1042,6 +1084,20 @@
   $.fn.searchTool.defaults = {
     title: 'Search',
     keywords: true,
+    locationSearch: {
+      enabled: false,
+      label: 'Suburb or postcode',
+      matchFields: {
+        suburb: 'suburb',
+        postcode: 'postcode'
+      },
+      distanceEnabled: true,
+      distanceRadius: {
+        label: 'Distance radius (km)',
+        options: ['', 5, 10, 15, 20],
+        default: '',
+      }
+    },
     submitLabel: 'Search', // Text for submit button.
     resetLabel: 'Clear', // Text for reset button.
     hideSearchWidget: false, // Option to not display search filters.
