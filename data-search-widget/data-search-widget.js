@@ -599,7 +599,7 @@
             }
             //when reset
             clearMarkers();
-            regenerateMap(globalData);
+            addMarkers(globalData);
           },
           filterItems: function (items) {
             var context = '#' + uniqueId
@@ -691,7 +691,7 @@
 
             clearMarkers();
             // add layers
-            regenerateMap(results);
+            addMarkers(results);
 
             $('.results').empty()
             if (results.length) {
@@ -1092,8 +1092,6 @@
   function initMap(mapsData) {
     let mapEle = document.getElementById('search-widget-maps');
     let controlsPosition = mapEle.getAttribute('data-controlsPosition');
-    let gridSize = 30;
-    let markers = {};
     let center
     let zoom;
 
@@ -1132,11 +1130,16 @@
             position: "topright",
         })
         .addTo(map);
+    addMarkers(mapsData);
+  }
 
+  function addMarkers(mapsData) {
+    let markers = {};
+    let gridSize = 30;
     let markerClusters = L.markerClusterGroup({
-        showCoverageOnHover: false,
-        animateAddingMarkers: true,
-        maxClusterRadius: gridSize,
+      showCoverageOnHover: false,
+      animateAddingMarkers: true,
+      maxClusterRadius: gridSize,
     });
     $.each(mapsData, function (key, item) {
       if (item.latitude != "(blank)" && item.longitude != "(blank)") {
@@ -1157,38 +1160,8 @@
     markerClusters.addTo(map);
     globalClusters = markerClusters;
   }
-
   function clearMarkers() {
     // clear map layers
     globalClusters.clearLayers();
-  }
-
-  function regenerateMap(mapsData) {
-    let markers = {};
-    let markerClusters = L.markerClusterGroup(
-      {
-        showCoverageOnHover: false,
-        animateAddingMarkers: true,
-        maxClusterRadius: 30,
-    }
-    );
-    $.each(mapsData, function (key, item) {
-      if (item.latitude != "(blank)" && item.longitude != "(blank)") {
-        // put it on the map?
-        if (!item.latitude) {
-          return;
-        }
-        var latlong = item.latitude + ',' + item.longitude;
-          if (!markers[latlong]) {
-              // add marker to map
-              markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
-              markers[latlong].bindPopup(item.outletName);
-              markerClusters.addLayer(markers[latlong]);
-          }
-      }
-    });
-    map.addLayer(markerClusters);
-    //markerClusters.addTo(map); // they work the same
-    globalClusters = markerClusters;
   }
 })(jQuery)
