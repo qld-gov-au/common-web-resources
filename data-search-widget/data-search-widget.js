@@ -223,6 +223,7 @@
               title = config.title.length ? $('<h2>').text(config.title) : '',
               form = $('<form>').addClass('search-form').attr('novalidate', '')
 
+          // Build Keywords Search input field
           if (config.keywords) {
             var kwFieldset = $('<fieldset>').attr('id', 'keywords-input')
             var kwLabel = $('<label>').attr('for', 'keywords-filter').text('Keywords').addClass('qld-text-input-label')
@@ -231,31 +232,59 @@
             form.append(kwFieldset)
           }
 
+          // Build Location Search input fields
           if (config.locationSearch?.enabled) {
-            // Add location search field, distance radius, and location typeahead
-            var locationField = searchTool.build.inputField({
-              id: 'locationSearch',
-              label: config.locationSearch?.label || 'Suburb / Postcode',
-              type: 'text',
-              defaultValue: config.locationSearch?.defaultValue || ''
-            })
 
-            form.append(locationField);
-
-            if (config.locationSearch.distanceEnabled) {
-              var distanceField = searchTool.build.inputField({
-                id: 'distanceRadius',
-                label: config.locationSearch.distanceInput?.label || 'Distance Around',
-                type: 'select',
-                options: config.locationSearch.radiusOptions || [5, 10, 15, 20],
-                defaultValue: config.locationSearch.radiusDefault || 5
-              });
-
-              form.append(distanceField);
+            // Location search text field
+            var locationFieldset = $('<fieldset>').attr('id', 'locationSearch-input')
+            var locationLabel = $('<label>')
+              .attr('for', 'locationSearch-filter')
+              .addClass('qld-text-input-label')
+              .text(config.locationSearch?.label || 'Suburb / Postcode')
+            var locationInput = $('<input>')
+              .attr({
+                id: 'locationSearch-filter',
+                name: 'locationSearch',
+                type: 'text',
+              })
+              .addClass('form-control form-text locationSearch')
+              .val(config.locationSearch?.defaultValue || '')
+          
+            locationFieldset.append(locationLabel, locationInput)
+            form.append(locationFieldset)
+          
+            // Distance radius dropdown field
+            if (config.locationSearch?.distanceEnabled) {
+              var distanceFieldset = $('<fieldset>').attr('id', 'distanceRadius-input')
+              var distanceLabel = $('<label>')
+                .attr('for', 'distanceRadius-filter')
+                .addClass('qld-text-input-label')
+                .text(config.locationSearch?.distanceRadius?.label || 'Distance Around (km)')
+          
+              var distanceSelect = $('<select>')
+                .attr({
+                  id: 'distanceRadius-filter',
+                  name: 'distanceRadius',
+                })
+                .addClass('form-control')
+          
+              var radiusOptions = config.locationSearch?.distanceRadius?.options || ['', 5, 10, 15, 20]
+              var defaultRadius = config.locationSearch?.distanceRadius?.default || ''
+          
+              radiusOptions.forEach(function (value) {
+                var option = $('<option>').val(value).text(value ? `${value} km` : '— Select distance —')
+                if (value == defaultRadius) {
+                  option.attr('selected', true)
+                }
+                distanceSelect.append(option)
+              })
+          
+              distanceFieldset.append(distanceLabel, distanceSelect)
+              form.append(distanceFieldset)
             }
           }
 
-
+          // Build other filter fields
           if (config.filterFields) {
             var filtersContainer = $('<fieldset>').attr('id', 'filters')
             form.append(filtersContainer)
@@ -560,36 +589,6 @@
         },
         pageSummary: function () {
           return $('<div>').addClass('page-summary').insertBefore('.results')
-        },
-        inputField: function (params) {
-          var id = params.id;
-          var labelText = params.label || id;
-          var type = params.type || 'text';
-          var options = params.options || [];
-          var defaultValue = params.defaultValue || '';
-
-          var fieldset = $('<fieldset>').attr('id', id + '-input').addClass('form-item')
-          var label = $('<label>').attr('for', id + '-filter').text(labelText).addClass('qld-text-input-label')
-
-          var input
-
-          if (type === 'select') {
-            input = $('<select>').attr({ id: id + '-filter', name: id, class: 'form-control' })
-            input.append($('<option selected value="">').text('—Select a ' + labelText + '—'))
-
-            options.forEach(function (option) {
-              var val = option.toString()
-              var opt = $('<option>').val(val).text(val)
-              if (defaultValue && defaultValue.toString() === val) {
-                opt.attr('selected', 'selected')
-              }
-              input.append(opt)
-            })
-          } else {
-            input = $('<input>').attr({ type: type, id: id + '-filter', name: id }).addClass('form-control').val(defaultValue)
-          }
-
-          return fieldset.append(label, input)
         },
       },
       actions: function (data, uniqueId) {
