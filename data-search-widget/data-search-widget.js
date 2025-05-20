@@ -14,7 +14,27 @@
           loaded: false
         },
         select2: {
-          script: 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', //'./?a=60482',
+          script: 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+          loaded: false
+        },
+        leafletJs: {
+          script: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js',
+          loaded: false
+        },
+        leafletMarkerClusterJs: {
+          script: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js',
+          loaded: false
+        },
+        esriLeafletJs: {
+          script: 'https://cdnjs.cloudflare.com/ajax/libs/esri-leaflet/3.1.0/esri-leaflet.js',
+          loaded: false
+        },
+        esriLeafletVectorJs: {
+          script: 'https://cdn.jsdelivr.net/npm/esri-leaflet-vector@4.2.8/dist/esri-leaflet-vector.js',
+          loaded: false
+        },
+        leafletTileLayerFallbackJs: {
+          script: 'https://unpkg.com/leaflet.tilelayer.fallback@1.0.4/dist/leaflet.tilelayer.fallback.js',
           loaded: false
         }
       },
@@ -83,16 +103,36 @@
             data = searchTool.helpers.standardiseKeys(data)
 
             if (config.maps) {
-              $('#search-widget-maps').css("height", "400px");
-              initMap(data);
-              /*for (i = 0; i < leafletCss.length; i ++) {
+              for (i = 0; i < leafletCss.length; i ++) {
                 addLeafletCSS(leafletCss[i]);
-                //loadCss(leafletCss[i], scriptLoaded)
               }
-              getScriptArray(leafletScripts);
-              for (i = 0; i < leafletScripts.length; i ++) {
-                loadScript(leafletScripts[i], scriptLoaded);
-              }*/
+              $('#search-widget-maps').css("height", "400px");
+              if (!searchTool.scripts.leafletJs.loaded) {
+                $.getScript(searchTool.scripts.leafletJs.script).done(function () {
+                  searchTool.scripts.leafletJs.loaded = true
+                  if (!searchTool.scripts.leafletMarkerClusterJs.loaded) {
+                    $.getScript(searchTool.scripts.leafletMarkerClusterJs.script).done(function () {
+                      searchTool.scripts.leafletMarkerClusterJs.loaded = true
+                      if (!searchTool.scripts.esriLeafletJs.loaded) {
+                        $.getScript(searchTool.scripts.esriLeafletJs.script).done(function () {
+                          searchTool.scripts.esriLeafletJs.loaded = true
+                          if (!searchTool.scripts.esriLeafletVectorJs.loaded) {
+                            $.getScript(searchTool.scripts.esriLeafletVectorJs.script).done(function () {
+                              searchTool.scripts.esriLeafletVectorJs.loaded = true
+                              if (!searchTool.scripts.leafletTileLayerFallbackJs.loaded) {
+                                $.getScript(searchTool.scripts.leafletTileLayerFallbackJs.script).done(function () {
+                                  searchTool.scripts.leafletTileLayerFallbackJs.loaded = true
+                                  initMap(data);
+                                })
+                              }
+                            })
+                          }
+                        })
+                      }
+                    })
+                  }
+                })
+              }
             }
 
             // Add flattened version of filter fields to searchTool.
@@ -1033,44 +1073,25 @@
                         //'https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.js',
                         'https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js',
                         //'https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js',
-                        //'https://cdnjs.cloudflare.com/ajax/libs/esri-leaflet/3.1.0/esri-leaflet.js',
-                        'https://cdnjs.cloudflare.com/ajax/libs/esri-leaflet/3.0.10/esri-leaflet.js',
+                        'https://cdnjs.cloudflare.com/ajax/libs/esri-leaflet/3.1.0/esri-leaflet.js',
+                        //'https://cdnjs.cloudflare.com/ajax/libs/esri-leaflet/3.0.10/esri-leaflet.js',
                         //'https://cdn.jsdelivr.net/npm/esri-leaflet-vector@4.2.8/dist/esri-leaflet-vector.js',
-                        //'https://unpkg.com/esri-leaflet-vector@4.2.8/dist/esri-leaflet-vector.js',
-                        'https://unpkg.com/esri-leaflet-vector@4.1.0/dist/esri-leaflet-vector.js',
+                        'https://unpkg.com/esri-leaflet-vector@4.2.8/dist/esri-leaflet-vector.js',
+                        //'https://unpkg.com/esri-leaflet-vector@4.1.0/dist/esri-leaflet-vector.js',
                         'https://unpkg.com/leaflet.tilelayer.fallback@1.0.4/dist/leaflet.tilelayer.fallback.js'
   ];
 
-  let scriptsLoaded = 0;
-  let cssLoaded = 0;
   let globalData;
   let map;
   let globalClusters;
-  const totalScripts = leafletScripts.length;
-  const totalCss = leafletCss.length;
 
-  function loadScript(src, callback) {
-    const script = document.createElement('script');
-    script.src = src;
-    script.onload = callback;
-    document.head.appendChild(script);
-  }
-  function loadCss(src, callback) {
+  function addCss(src, callback) {
     const link = document.createElement('link');
     link.src = src;
     link.rel = "stylesheet";
     link.type = "text/css";
     link.onload = callback;
     document.head.appendChild(link);
-  }
-  function scriptLoaded() {
-    scriptsLoaded++;
-    cssLoaded ++;
-    if ((scriptsLoaded === totalScripts) && (cssLoaded === totalCss)
-    ) {
-      //setTimeout(initMap(globalData), 1000)
-      initMap(globalData);
-    }
   }
 
   function addLeafletCSS(src) {
@@ -1079,14 +1100,6 @@
       type: 'text/css',
       href: src
     }).appendTo('head');
-
-  }
-  function getScriptArray(arr, i) {
-    i = i || 0;
-    jQuery.getScript(arr[i], function() {
-      i++;
-      arr.length > i && getScriptArray(arr, i);
-    });
   }
 
   function initMap(mapsData) {
