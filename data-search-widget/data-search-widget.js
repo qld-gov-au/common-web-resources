@@ -103,10 +103,15 @@
             data = searchTool.helpers.standardiseKeys(data)
 
             if (config.maps) {
+              var mapDiv = $('<div id="search-widget-maps"></div>');
+              var searchToolDiv = $('#search-tool');
+              mapDiv.insertBefore(searchToolDiv);
+              $('#search-widget-maps').css("height", "400px");
+
               for (i = 0; i < leafletCss.length; i ++) {
                 addLeafletCSS(leafletCss[i]);
               }
-              $('#search-widget-maps').css("height", "400px");
+
               if (!searchTool.scripts.leafletJs.loaded) {
                 $.getScript(searchTool.scripts.leafletJs.script).done(function () {
                   searchTool.scripts.leafletJs.loaded = true
@@ -284,11 +289,6 @@
             var kwInput = $('<input>').addClass('form-control form-text search-keywords').attr({ id: 'keywords-filter', type: 'text' })
             kwFieldset.append(kwLabel, kwInput)
             form.append(kwFieldset)
-          }
-
-          if (!config.maps) {
-            var maps = $('#search-widget-maps')
-            maps.hide();
           }
 
           if (config.filterFields) {
@@ -1084,15 +1084,6 @@
   let globalData;
   let map;
   let globalClusters;
-
-  function addCss(src, callback) {
-    const link = document.createElement('link');
-    link.src = src;
-    link.rel = "stylesheet";
-    link.type = "text/css";
-    link.onload = callback;
-    document.head.appendChild(link);
-  }
 
   function addLeafletCSS(src) {
     $('<link>', {
