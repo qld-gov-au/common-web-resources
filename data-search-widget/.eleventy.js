@@ -5,6 +5,7 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("data-search-widget.js")
   eleventyConfig.addPassthroughCopy("utils/helpers.js")
   eleventyConfig.addPassthroughCopy("**/*.csv");
+  eleventyConfig.addPassthroughCopy("examples/*.json");
   eleventyConfig.addPassthroughCopy("./node_modules/bootstrap/dist/css/bootstrap.min.css")
   eleventyConfig.addPassthroughCopy("./node_modules/bootstrap/dist/js/bootstrap.min.js")
   eleventyConfig.addPassthroughCopy("./node_modules/jquery/dist/jquery.min.js")
@@ -14,7 +15,8 @@ module.exports = function (eleventyConfig) {
     watch: [
       "_site/**/*.css",
       "_site/**/*.js",
-      "_site/**/*.csv"
+      "_site/**/*.csv",
+      "_site/**/*.json"
     ]
   })
 }

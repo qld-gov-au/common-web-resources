@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Data Search Tool - Preview</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/layout.css" />
+    <link rel="stylesheet" href="/css/data-search-widget.css" />
+
+    <style>
+        body {
+            padding: 2rem;
+        }
+    </style>
+
+    <script src="/node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="/node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/data-search-widget.js"></script>
+    <script src="/utils/helpers.js"></script>
+</head>
+
+<body>
+
+    <div id="search-widget"></div>
+    <div id="search-tool"></div>
+
+    <script type="text/javascript">
+
+        function addMapsSample() {
+            var map = L.map('search-widget-maps-sample').setView([51.505, -0.09], 13);
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+            L.marker([51.5, -0.09]).addTo(map)
+                .bindPopup('A pretty CSS popup.<br> Easily customizable.')
+                .openPopup();
+        }
+        function australiaWideTag(australiaWideFlag) {
+            if (australiaWideFlag == 'Yes') {
+                return `<span class="badge badge-pill qg-tag qg-tag-blue">AUS wide</span>`
+            } else {
+                return '';
+            }
+        }
+        function overseasTag(overseasFlag) {
+            if (overseasFlag == 'Yes') {
+                return `<span class="badge badge-pill qg-tag qg-tag-green">Overseas</span>`
+            } else {
+                return '';
+            }
+        }
+        function carerSchemeTag(carerSchemeFlag) {
+            if (carerSchemeFlag == 'Yes') {
+                return `<span class="badge badge-pill qg-tag qg-tag-yellow">Carer</span>`
+            } else {
+                return '';
+            }
+        }
+        function seniorSchemeTag(seniorSchemeFlag) {
+            if (seniorSchemeFlag == 'Yes') {
+                return `<span class="badge badge-pill qg-tag qg-tag-purple">Senior</span>`
+            } else {
+                return '';
+            }
+        }
+        function getDirection(latitude, longitude) {
+            return '<p><a href="https://www.google.com/maps/dir/?api=1&destination=' + latitude + ',' + longitude + '" target="_blank">Get directions</a></p>';
+        }
+        function returnWebsite(website) {
+            returnVal = ''
+            if (website != '(blank)') {
+                returnVal += `<p><strong>Website:</strong> <a href=`;
+                if (website.indexOf("http") < 0) {
+                    returnVal += `"http://`
+                }
+                returnVal += website + `">` + website + `</a></p>`
+            }
+            return returnVal;
+        }
+
+        let category_options = [];
+
+        (function ($) {
+            // Get categories from JSON file
+            $.getJSON('/examples/ccms-business-categories.json')
+
+                .done(function (category_options) {
+                    // console.log('category_options :>> ', category_options);
+
+                    var options = {
+                        dataSources: [{
+                            url: 'https://www.data.qld.gov.au/api/3/action/datastore_search?resource_id=33159533-c2ee-4e11-902d-e2d250e2c84c&limit=9000',
+                            results: 'result.records',
+                        }],
+                        maps: false,
+                        keywordFields: [
+                            'outletName',  // @TODO: add this on Squiz
+                            'website',
+                            'discount',
+                        ],
+                        locationSearch: {
+                            enabled: true,
+                            label: 'Suburb or postcode',
+                            matchFields: {
+                                suburb: 'outletSuburb',
+                                postcode: 'outletPostcode'
+                            },
+                            distanceEnabled: true,
+                            distanceInput: {
+                                label: 'Distance Around (km)',
+                                default: 5,
+                            }
+                        },
+                        filterFields: {
+                            cardType: {
+                                type: 'check',
+                                label: 'Card type',
+                                multi: true,
+                                data: {
+                                    type: 'array',
+                                    separator: ','
+                                }
+                            },
+                            parentCategory: {
+                                type: 'select',
+                                label: 'Category',
+                                defaultText: 'category',
+                                dependents: {
+                                    businessCategory: {
+                                        type: 'select',
+                                        label: 'Subcategory',
+                                        defaultText: 'subcategory'
+                                    }
+                                }
+                            }
+                        },
+                        dataCallback: (data) => {
+                            // console.log('category_options in dataCallback :>> ', category_options);
+                            // console.log('data in dataCallback :>> ', data);
+                            // Add parent category to each datasource
+                            data.forEach(set => {
+                                let parentCategory = category_options.find(option => {
+                                    return option.children && option.children.some(child => child.value === set['Business Category']);
+                                });
+                                set.parentCategory = parentCategory ? parentCategory.value : '';
+                                
+                                // Add cardType as a new data property based on the record's
+                                // scheme flags
+                                set.cardType = [];
+                                if (set['Senior Scheme Flag'] === 'Yes') { set.cardType.push('Seniors'); }
+                                if (set['Carer Scheme Flag'] === 'Yes') { set.cardType.push('Carers'); }
+                                set.cardType = set.cardType.join(',');                                            
+                            })
+
+                            return data
+                        },
+                        resultTemplate: {
+                            data: function (results) {
+                                return results.map(function (entry) {
+                                    // Define and prepare markup for results.
+
+                                    return {
+                                        outletName: entry.outletName,
+                                        businessCategory: entry.businessCategory,
+                                        discount: entry.discount,
+
+                                        website: entry["website"],
+                                        telephoneNumber: entry.telephoneNumber,
+                                        outletAddress: entry.outletAddress,
+                                        outletSuburb: entry.outletSuburb,
+                                        outletPostcode: entry.outletPostcode,
+
+                                        australiaWideFlag: entry.australiaWideFlag,
+                                        overseasFlag: entry.overseasFlag,
+
+                                        carerSchemeFlag: entry.carerSchemeFlag,
+                                        seniorSchemeFlag: entry.seniorSchemeFlag,
+
+                                        onlineMailOrderFlag: entry.onlineMailOrderFlag,
+
+                                        latitude: entry.latitude,
+                                        longitude: entry.longitude
+                                    }
+                                });
+                            },
+                            markup: function (result) {
+                                var returnstring = `
+                                <div class="col">
+                                    <div class="qg-card qg-card__light-theme">
+                                        <div class="content">
+                                            <div class="details     card-body">
+                                            <h3 class="card-title">${result.outletName}</h3>
+                                            <div class="card-text">
+                                                <p><strong>Category:</strong> ${result.businessCategory}</p>
+                                                <p><strong>Discount:</strong> ${result.discount}</p>`;
+                                                    returnstring += returnWebsite(`${result.website}`);
+                                                    returnstring +=
+                                                        `<p><strong>Address:</strong> ${result.outletAddress} ${result.outletSuburb} ${result.outletPostcode}</p>`
+                                                    returnstring += getDirection(`${result.latitude}`, `${result.longitude}`);
+                                                    returnstring += `<p><strong>Phone:</strong> <a href="tel:${result.telephoneNumber}">${result.telephoneNumber}</a></p>`
+
+                                                    returnstring += `</div>
+                                            </div>`
+                                                    returnstring += `<div class="card-footer">`;
+                                                    returnstring += australiaWideTag(`${result.australiaWideFlag}`)
+                                                    returnstring += overseasTag(`${result.overseasFlag}`)
+                                                    returnstring += carerSchemeTag(`${result.carerSchemeFlag}`)
+                                                    returnstring += seniorSchemeTag(`${result.seniorSchemeFlag}`)
+                                                    returnstring += `</div>
+                                        </div> 
+                                    </div>
+                                </div>`;
+                                returnstring = `<p><strong>${result.outletName}</strong> - ${result.outletSuburb} - ${result.outletPostcode}</p>`;
+
+                                return returnstring;
+                            },
+                        },
+                    }
+                    // Create the search tool inside the target element.
+                    var searchTool = $('#search-tool').searchTool(options);
+                })
+                .fail(function (jqxhr, textStatus, error) {
+                    var err = textStatus + ", " + error;
+                    console.log("Request Failed: " + err);
+                });            
+        })(jQuery);
+    </script>
+
+</body>
+
+</html>
