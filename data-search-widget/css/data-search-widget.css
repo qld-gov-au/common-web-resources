@@ -92,3 +92,30 @@
 }
 
 /*# sourceMappingURL=data-search-widget.css.map */
+
+/* @DEBUG LOCALHOST only */
+#search-tool {
+  display: flex;
+  flex-direction: row-reverse;
+  column-gap: 20px;
+  margin-top: 20px;
+}
+#search-tool #results-container, #search-tool .qg-search-widget-qgds {
+  width: 50%;
+}
+#search-tool .qg-search-widget-qgds {
+  margin-top: 15px;
+}
+#search-tool .results {
+  width: 100%;
+  margin: 0;
+}
+#search-tool .pager {
+  margin-top: 20px;
+}
+.page-summary {
+  padding: 10px;
+  margin-bottom: 30px;
+  background-color: #dedede;
+}
+/* End: @DEBUG LOCALHOST only */

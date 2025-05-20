@@ -1,0 +1,1256 @@
+---
+layout: layout.njk
+---
+
+<div class="container">
+    <div id="search-widget-maps"></div>
+    <div id="search-tool"></div>
+</div>
+
+<script type="text/javascript">
+
+function australiaWideTag(australiaWideFlag) {
+    if (australiaWideFlag == 'Yes') {
+        return `<span class="badge badge-pill qg-tag qg-tag-blue">AUS wide</span>`
+    } else {
+        return '';
+    }
+}
+function overseasTag(overseasFlag) {
+    if (overseasFlag == 'Yes') {
+        return `<span class="badge badge-pill qg-tag qg-tag-green">Overseas</span>`
+    } else {
+        return '';
+    }
+}
+function carerSchemeTag(carerSchemeFlag) {
+    if (carerSchemeFlag == 'Yes') {
+        return `<span class="badge badge-pill qg-tag qg-tag-yellow">Carer</span>`
+    } else {
+        return '';
+    }
+}
+function seniorSchemeTag(seniorSchemeFlag) {
+    if (seniorSchemeFlag == 'Yes') {
+        return `<span class="badge badge-pill qg-tag qg-tag-purple">Senior</span>`
+    } else {
+        return '';
+    }
+}
+function getDirection(latitude, longitude) {
+    retVal = ''
+    if (latitude != '(blank)' && longitude != '(blank)')
+    retVal = '<p><a href="https://www.google.com/maps/dir/?api=1&destination=' + latitude + ',' + longitude + '" target="_blank">Get directions</a></p>';
+    return retVal;
+}
+function returnAddress(address, suburb, postcode)  {
+    returnVal = '';
+    if (address == '(blank)') address = '';
+    if (suburb == "(blank)") suburb = '';
+    if (postcode == "(blank)") postcode = '';
+    if ((address != '') || (suburb != '') || (postcode != ''))
+        returnVal = `<p><strong>Address:</strong> ` + address + " " + suburb + " " + postcode + `</p>`
+    return returnVal;
+}
+function returnWebsite(website) {
+    returnVal = ''
+    if (website != '(blank)') {
+        returnVal += `<p><strong>Website:</strong> <a href=`;
+        if (website.indexOf("http") < 0) {
+            returnVal += `"http://`
+        }
+        returnVal += website + `">` + website + `</a></p>`
+    }
+    return returnVal;
+}
+
+(function($) {
+  let category_options = [
+    {
+      value: "All categories",
+      label: "All categories"
+    },
+    {
+      value: "Accommodation",
+      label: "Accommodation",
+      children: [
+        {
+          value: "Accommodation",
+          label: "--- Accommodation"
+        },
+        {
+          value: "Accommodation - B and B",
+          label: "--- Accommodation - B and B"
+        },
+        {
+          value: "Accommodation - Caravan Parks and Camping",
+          label: "--- Accommodation - Caravan Parks and Camping"
+        }
+      ]
+    },
+    {
+      value: "Ageing and Aged Care",
+      label: "Ageing and Aged Care",
+      children: [
+        {
+          value: "Community and Information Services",
+          label: "--- Community and Information Services"
+        },
+        {
+          value: "Older Persons' Support",
+          label: "--- Older Persons' Support"
+        },
+        {
+          value: "Residential, Respite and Community Care",
+          label: "--- Residential, Respite and Community Care"
+        },
+        {
+          value: "Retirement Villages",
+          label: "--- Retirement Villages"
+        }
+      ]
+    },
+    {
+      value: "Automotive and Transport",
+      label: "Automotive and Transport",
+      children: [
+        {
+          value: "Air Conditioning",
+          label: "--- Air Conditioning"
+        },
+        {
+          value: "Batteries",
+          label: "--- Batteries"
+        },
+        {
+          value: "Boating",
+          label: "--- Boating"
+        },
+        {
+          value: "Brakes, Exhausts, Steering and Suspension",
+          label: "--- Brakes, Exhausts, Steering and Suspension"
+        },
+        {
+          value: "Camper Trailers, Caravans and Motorhomes",
+          label: "--- Camper Trailers, Caravans and Motorhomes"
+        },
+        {
+          value: "Car Cleaning and Detailing",
+          label: "--- Car Cleaning and Detailing"
+        },
+        {
+          value: "Car Hire",
+          label: "--- Car Hire"
+        },
+        {
+          value: "Electrical",
+          label: "--- Electrical"
+        },
+        {
+          value: "Engines and Transmissions",
+          label: "--- Engines and Transmissions"
+        },
+        {
+          value: "Insurance",
+          label: "--- Insurance"
+        },
+        {
+          value: "Motorcycle Sales and Services",
+          label: "--- Motorcycle Sales and Services"
+        },
+        {
+          value: "Panel and Paint Repairs",
+          label: "--- Panel and Paint Repairs"
+        },
+        {
+          value: "Parts and Accessories",
+          label: "--- Parts and Accessories"
+        },
+        {
+          value: "Repairs and Servicing",
+          label: "--- Repairs and Servicing"
+        },
+        {
+          value: "Roadside Assistance and Towing",
+          label: "--- Roadside Assistance and Towing"
+        },
+        {
+          value: "Service Stations",
+          label: "--- Service Stations"
+        },
+        {
+          value: "Tyres, Wheels and Rims",
+          label: "--- Tyres, Wheels and Rims"
+        },
+        {
+          value: "Vehicle Sales",
+          label: "--- Vehicle Sales"
+        },
+        {
+          value: "Wheel Alignment and Balancing",
+          label: "--- Wheel Alignment and Balancing"
+        }
+      ]
+    },
+    {
+      value: "Food and Drink",
+      label: "Food and Drink",
+      children: [
+        {
+          value: "Bakeries",
+          label: "--- Bakeries"
+        },
+        {
+          value: "Cafes",
+          label: "--- Cafes"
+        },
+        {
+          value: "Gourmet and Specialty Items",
+          label: "--- Gourmet and Specialty Items"
+        },
+        {
+          value: "Health and Organic",
+          label: "--- Health and Organic"
+        },
+        {
+          value: "Ice Creamery",
+          label: "--- Ice Creamery"
+        },
+        {
+          value: "Restaurants and Dining Out",
+          label: "--- Restaurants and Dining Out"
+        },
+        {
+          value: "Takeaway",
+          label: "--- Takeaway"
+        },
+        {
+          value: "Wineries",
+          label: "--- Wineries"
+        }
+      ]
+    },
+    {
+      value: "Health and Medical",
+      label: "Health and Medical",
+      children: [
+        {
+          value: "Acupuncturists",
+          label: "--- Acupuncturists"
+        },
+        {
+          value: "Chiropractors",
+          label: "--- Chiropractors"
+        },
+        {
+          value: "Dental Prosthetists",
+          label: "--- Dental Prosthetists"
+        },
+        {
+          value: "Dentists",
+          label: "--- Dentists"
+        },
+        {
+          value: "Dietitians and Dietary Services",
+          label: "--- Dietitians and Dietary Services"
+        },
+        {
+          value: "Disability Services",
+          label: "--- Disability Services"
+        },
+        {
+          value: "First Aid Products and Services",
+          label: "--- First Aid Products and Services"
+        },
+        {
+          value: "Health Insurance",
+          label: "--- Health Insurance"
+        },
+        {
+          value: "Health Products",
+          label: "--- Health Products"
+        },
+        {
+          value: "Hearing Products and Services",
+          label: "--- Hearing Products and Services"
+        },
+        {
+          value: "Home Care Aids and Equipment",
+          label: "--- Home Care Aids and Equipment"
+        },
+        {
+          value: "Hypnotherapists",
+          label: "--- Hypnotherapists"
+        },
+        {
+          value: "Life Coaching",
+          label: "--- Life Coaching"
+        },
+        {
+          value: "Massage",
+          label: "--- Massage"
+        },
+        {
+          value: "Medical Aids",
+          label: "--- Medical Aids"
+        },
+        {
+          value: "Medical Services",
+          label: "--- Medical Services"
+        },
+        {
+          value: "Meditation",
+          label: "--- Meditation"
+        },
+        {
+          value: "Mobility Products and Scooters",
+          label: "--- Mobility Products and Scooters"
+        },
+        {
+          value: "Natural Therapies",
+          label: "--- Natural Therapies"
+        },
+        {
+          value: "Naturopaths",
+          label: "--- Naturopaths"
+        },
+        {
+          value: "Nursing Services",
+          label: "--- Nursing Services"
+        },
+        {
+          value: "Occupational Therapists",
+          label: "--- Occupational Therapists"
+        },
+        {
+          value: "Optometrists and Optical Dispensers",
+          label: "--- Optometrists and Optical Dispensers"
+        },
+        {
+          value: "Osteopaths",
+          label: "--- Osteopaths"
+        },
+        {
+          value: "Personal Alarms",
+          label: "--- Personal Alarms"
+        },
+        {
+          value: "Physiotherapists",
+          label: "--- Physiotherapists"
+        },
+        {
+          value: "Podiatrists and Foot Care",
+          label: "--- Podiatrists and Foot Care"
+        },
+        {
+          value: "Psychologists and Counselling",
+          label: "--- Psychologists and Counselling"
+        },
+        {
+          value: "Quit Smoking Services",
+          label: "--- Quit Smoking Services"
+        },
+        {
+          value: "Speech Pathologists",
+          label: "--- Speech Pathologists"
+        }
+      ]
+    },
+    {
+      value: "House and Home",
+      label: "House and Home",
+      children: [
+        {
+          value: "Agricultural Produce Supplies",
+          label: "--- Agricultural Produce Supplies"
+        },
+        {
+          value: "Air Conditioning and Heating",
+          label: "--- Air Conditioning and Heating"
+        },
+        {
+          value: "Barbeques",
+          label: "--- Barbeques"
+        },
+        {
+          value: "Beds and Mattresses",
+          label: "--- Beds and Mattresses"
+        },
+        {
+          value: "Blinds and Awnings",
+          label: "--- Blinds and Awnings"
+        },
+        {
+          value: "Boarding Kennels and Catteries",
+          label: "--- Boarding Kennels and Catteries"
+        },
+        {
+          value: "Carpets and Floor Coverings",
+          label: "--- Carpets and Floor Coverings"
+        },
+        {
+          value: "Cleaning Products and Services",
+          label: "--- Cleaning Products and Services"
+        },
+        {
+          value: "Computer Support and Services",
+          label: "--- Computer Support and Services"
+        },
+        {
+          value: "Curtains and Blinds",
+          label: "--- Curtains and Blinds"
+        },
+        {
+          value: "Dry Cleaning and Laundry Services",
+          label: "--- Dry Cleaning and Laundry Services"
+        },
+        {
+          value: "Electrical Goods",
+          label: "--- Electrical Goods"
+        },
+        {
+          value: "Electricity Supplier",
+          label: "--- Electricity Supplier"
+        },
+        {
+          value: "Garage Doors",
+          label: "--- Garage Doors"
+        },
+        {
+          value: "Gardening and Mowing",
+          label: "--- Gardening and Mowing"
+        },
+        {
+          value: "Gas Products and Services",
+          label: "--- Gas Products and Services"
+        },
+        {
+          value: "Gas Struts",
+          label: "--- Gas Struts"
+        },
+        {
+          value: "Glass and Mirrors",
+          label: "--- Glass and Mirrors"
+        },
+        {
+          value: "Handyman and Property Maintenance",
+          label: "--- Handyman and Property Maintenance"
+        },
+        {
+          value: "Home Insurance",
+          label: "--- Home Insurance"
+        },
+        {
+          value: "Hot Water",
+          label: "--- Hot Water"
+        },
+        {
+          value: "Insulation",
+          label: "--- Insulation"
+        },
+        {
+          value: "Key Cutting and Engraving",
+          label: "--- Key Cutting and Engraving"
+        },
+        {
+          value: "Lifts and Elevators",
+          label: "--- Lifts and Elevators"
+        },
+        {
+          value: "Lighting",
+          label: "--- Lighting"
+        },
+        {
+          value: "Locksmiths",
+          label: "--- Locksmiths"
+        },
+        {
+          value: "Mail Redirection",
+          label: "--- Mail Redirection"
+        },
+        {
+          value: "Manchester, Linen and Soft Furnishings",
+          label: "--- Manchester, Linen and Soft Furnishings"
+        },
+        {
+          value: "Mowers",
+          label: "--- Mowers"
+        },
+        {
+          value: "Packaging Products and Services",
+          label: "--- Packaging Products and Services"
+        },
+        {
+          value: "Pest and Termite Control and Inspections",
+          label: "--- Pest and Termite Control and Inspections"
+        },
+        {
+          value: "Pools and Spas",
+          label: "--- Pools and Spas"
+        },
+        {
+          value: "Refrigeration Sales and Services",
+          label: "--- Refrigeration Sales and Services"
+        },
+        {
+          value: "Removalists and Storage",
+          label: "--- Removalists and Storage"
+        },
+        {
+          value: "Rubber and Foam Supplies",
+          label: "--- Rubber and Foam Supplies"
+        },
+        {
+          value: "Rubbish Removal",
+          label: "--- Rubbish Removal"
+        },
+        {
+          value: "Sails and Shades",
+          label: "--- Sails and Shades"
+        },
+        {
+          value: "Security Alarms and Monitoring",
+          label: "--- Security Alarms and Monitoring"
+        },
+        {
+          value: "Security Screens and Doors",
+          label: "--- Security Screens and Doors"
+        },
+        {
+          value: "Sharpening Services",
+          label: "--- Sharpening Services"
+        },
+        {
+          value: "Shelving and Storage Solutions",
+          label: "--- Shelving and Storage Solutions"
+        },
+        {
+          value: "Solar Sales and Services",
+          label: "--- Solar Sales and Services"
+        },
+        {
+          value: "Telecommunications",
+          label: "--- Telecommunications"
+        },
+        {
+          value: "TV and Video",
+          label: "--- TV and Video"
+        },
+        {
+          value: "TV Antennas",
+          label: "--- TV Antennas"
+        },
+        {
+          value: "Upholsterers",
+          label: "--- Upholsterers"
+        },
+        {
+          value: "Window Tinting",
+          label: "--- Window Tinting"
+        }
+      ]
+    },
+    {
+      value: "Professional Services",
+      label: "Professional Services",
+      children: [
+        {
+          value: "Accountants and Tax Agents",
+          label: "--- Accountants and Tax Agents"
+        },
+        {
+          value: "Architectural, Design and Drafting Services",
+          label: "--- Architectural, Design and Drafting Services"
+        },
+        {
+          value: "Auction Services",
+          label: "--- Auction Services"
+        },
+        {
+          value: "Auto - Driving Lessons",
+          label: "--- Auto - Driving Lessons"
+        },
+        {
+          value: "Banks and Financial Institutions",
+          label: "--- Banks and Financial Institutions"
+        },
+        {
+          value: "Body Corporate Services",
+          label: "--- Body Corporate Services"
+        },
+        {
+          value: "Building Inspections and Valuations",
+          label: "--- Building Inspections and Valuations"
+        },
+        {
+          value: "Business Administrative Services",
+          label: "--- Business Administrative Services"
+        },
+        {
+          value: "Business Consultants",
+          label: "--- Business Consultants"
+        },
+        {
+          value: "Catering Services",
+          label: "--- Catering Services"
+        },
+        {
+          value: "Celebrants",
+          label: "--- Celebrants"
+        },
+        {
+          value: "Engineering Services",
+          label: "--- Engineering Services"
+        },
+        {
+          value: "Financial Services",
+          label: "--- Financial Services"
+        },
+        {
+          value: "Freight Services",
+          label: "--- Freight Services"
+        },
+        {
+          value: "Funeral Insurance and Bonds",
+          label: "--- Funeral Insurance and Bonds"
+        },
+        {
+          value: "Funeral Services",
+          label: "--- Funeral Services"
+        },
+        {
+          value: "Graphic Artists and Designers",
+          label: "--- Graphic Artists and Designers"
+        },
+        {
+          value: "Identification Cards",
+          label: "--- Identification Cards"
+        },
+        {
+          value: "Legal Services",
+          label: "--- Legal Services"
+        },
+        {
+          value: "Loans and Mortgage Brokers",
+          label: "--- Loans and Mortgage Brokers"
+        },
+        {
+          value: "Printing, Photocopying and Laminating",
+          label: "--- Printing, Photocopying and Laminating"
+        },
+        {
+          value: "Private Investigations",
+          label: "--- Private Investigations"
+        },
+        {
+          value: "Property Valuers",
+          label: "--- Property Valuers"
+        },
+        {
+          value: "Real Estate Agencies and Property Managers",
+          label: "--- Real Estate Agencies and Property Managers"
+        },
+        {
+          value: "Surveyors",
+          label: "--- Surveyors"
+        },
+        {
+          value: "Veterinarians",
+          label: "--- Veterinarians"
+        },
+        {
+          value: "Website Services",
+          label: "--- Website Services"
+        }
+      ]
+    },
+    {
+      value: "Recreation and Leisure",
+      label: "Recreation and Leisure",
+      children: [
+        {
+          value: "Art Galleries",
+          label: "--- Art Galleries"
+        },
+        {
+          value: "Art, Craft and Sewing",
+          label: "--- Art, Craft and Sewing"
+        },
+        {
+          value: "Childrens' Play Centres",
+          label: "--- Childrens' Play Centres"
+        },
+        {
+          value: "Cinemas",
+          label: "--- Cinemas"
+        },
+        {
+          value: "Clairvoyants",
+          label: "--- Clairvoyants"
+        },
+        {
+          value: "Clubs, Hotels and Taverns",
+          label: "--- Clubs, Hotels and Taverns"
+        },
+        {
+          value: "Concerts and Theatre",
+          label: "--- Concerts and Theatre"
+        },
+        {
+          value: "DVD and Video Libraries",
+          label: "--- DVD and Video Libraries"
+        },
+        {
+          value: "Education, Training and Personal Development",
+          label: "--- Education, Training and Personal Development"
+        },
+        {
+          value: "Functions and Receptions",
+          label: "--- Functions and Receptions"
+        },
+        {
+          value: "Games and Hobbies",
+          label: "--- Games and Hobbies"
+        },
+        {
+          value: "Gyms, Health and Fitness",
+          label: "--- Gyms, Health and Fitness"
+        },
+        {
+          value: "Internet Cafes and Services",
+          label: "--- Internet Cafes and Services"
+        },
+        {
+          value: "Museums and Cultural Centres",
+          label: "--- Museums and Cultural Centres"
+        },
+        {
+          value: "Police and Citizens Youth Centres",
+          label: "--- Police and Citizens Youth Centres"
+        },
+        {
+          value: "Radio Stations",
+          label: "--- Radio Stations"
+        },
+        {
+          value: "Shows and Events",
+          label: "--- Shows and Events"
+        },
+        {
+          value: "Sporting Clubs",
+          label: "--- Sporting Clubs"
+        },
+        {
+          value: "Sports and Recreation",
+          label: "--- Sports and Recreation"
+        },
+        {
+          value: "Yoga Classes",
+          label: "--- Yoga Classes"
+        }
+      ]
+    },
+    {
+      value: "Shopping",
+      label: "Shopping",
+      children: [
+        {
+          value: "Antiques",
+          label: "--- Antiques"
+        },
+        {
+          value: "Batteries",
+          label: "--- Batteries"
+        },
+        {
+          value: "Beauty Products and Services",
+          label: "--- Beauty Products and Services"
+        },
+        {
+          value: "Bicycles",
+          label: "--- Bicycles"
+        },
+        {
+          value: "Books, Magazines and Newspapers",
+          label: "--- Books, Magazines and Newspapers"
+        },
+        {
+          value: "Butchers",
+          label: "--- Butchers"
+        },
+        {
+          value: "Camping Equipment",
+          label: "--- Camping Equipment"
+        },
+        {
+          value: "Children and Babies",
+          label: "--- Children and Babies"
+        },
+        {
+          value: "Clothing",
+          label: "--- Clothing"
+        },
+        {
+          value: "Clothing - Alterations, Dressmaking and Fabrics",
+          label: "--- Clothing - Alterations, Dressmaking and Fabrics"
+        },
+        {
+          value: "Clothing - Formal and Costume Hire",
+          label: "--- Clothing - Formal and Costume Hire"
+        },
+        {
+          value: "Collectables and Memorabilia",
+          label: "--- Collectables and Memorabilia"
+        },
+        {
+          value: "Computers",
+          label: "--- Computers"
+        },
+        {
+          value: "Department and Variety Stores",
+          label: "--- Department and Variety Stores"
+        },
+        {
+          value: "DVD and Video Production",
+          label: "--- DVD and Video Production"
+        },
+        {
+          value: "Fashion Accessories",
+          label: "--- Fashion Accessories"
+        },
+        {
+          value: "Florists",
+          label: "--- Florists"
+        },
+        {
+          value: "Food - Fruit and Vegetables",
+          label: "--- Food - Fruit and Vegetables"
+        },
+        {
+          value: "Food and Groceries - Home Delivery",
+          label: "--- Food and Groceries - Home Delivery"
+        },
+        {
+          value: "Footwear",
+          label: "--- Footwear"
+        },
+        {
+          value: "Footwear Repairs",
+          label: "--- Footwear Repairs"
+        },
+        {
+          value: "Furniture and Outdoor Furniture",
+          label: "--- Furniture and Outdoor Furniture"
+        },
+        {
+          value: "Gardening Products",
+          label: "--- Gardening Products"
+        },
+        {
+          value: "Gifts and Homewares",
+          label: "--- Gifts and Homewares"
+        },
+        {
+          value: "Hairdressers and Barbers",
+          label: "--- Hairdressers and Barbers"
+        },
+        {
+          value: "Hardware and Tools",
+          label: "--- Hardware and Tools"
+        },
+        {
+          value: "Jewellery",
+          label: "--- Jewellery"
+        },
+        {
+          value: "Landscaping Supplies and Services",
+          label: "--- Landscaping Supplies and Services"
+        },
+        {
+          value: "Liquor and Wine Sales",
+          label: "--- Liquor and Wine Sales"
+        },
+        {
+          value: "Mobile Phones and Accessories",
+          label: "--- Mobile Phones and Accessories"
+        },
+        {
+          value: "Music Retailers and Instruments ",
+          label: "--- Music Retailers and Instruments "
+        },
+        {
+          value: "Newsagents",
+          label: "--- Newsagents"
+        },
+        {
+          value: "Office Furniture and Equipment",
+          label: "--- Office Furniture and Equipment"
+        },
+        {
+          value: "Paint",
+          label: "--- Paint"
+        },
+        {
+          value: "Party Hire and Services",
+          label: "--- Party Hire and Services"
+        },
+        {
+          value: "Pet Products and Services",
+          label: "--- Pet Products and Services"
+        },
+        {
+          value: "Pharmacies",
+          label: "--- Pharmacies"
+        },
+        {
+          value: "Photographic Products and Services",
+          label: "--- Photographic Products and Services"
+        },
+        {
+          value: "Plant Nurseries",
+          label: "--- Plant Nurseries"
+        },
+        {
+          value: "Secondhand Goods and Services",
+          label: "--- Secondhand Goods and Services"
+        },
+        {
+          value: "Sewing Machines",
+          label: "--- Sewing Machines"
+        },
+        {
+          value: "Sheepskin and Wool Products",
+          label: "--- Sheepskin and Wool Products"
+        },
+        {
+          value: "Shopping Centres",
+          label: "--- Shopping Centres"
+        },
+        {
+          value: "Shopping Services",
+          label: "--- Shopping Services"
+        },
+        {
+          value: "Specialty Adult Shop",
+          label: "--- Specialty Adult Shop"
+        },
+        {
+          value: "Sports Stores",
+          label: "--- Sports Stores"
+        },
+        {
+          value: "Stationery and Office Supplies",
+          label: "--- Stationery and Office Supplies"
+        },
+        {
+          value: "Sunglasses",
+          label: "--- Sunglasses"
+        },
+        {
+          value: "Supermarkets and Grocery Stores",
+          label: "--- Supermarkets and Grocery Stores"
+        },
+        {
+          value: "Toys",
+          label: "--- Toys"
+        },
+        {
+          value: "Trophies and Plaques",
+          label: "--- Trophies and Plaques"
+        },
+        {
+          value: "Watches and Clocks",
+          label: "--- Watches and Clocks"
+        }
+      ]
+    },
+    {
+      value: "Social Introductions & Associated Services",
+      label: "Social Introductions & Associated Services",
+      children: [
+        {
+          value: "Social Introductions",
+          label: "--- Social Introductions"
+        }
+      ]
+    },
+    {
+      value: "Trade Services",
+      label: "Trade Services",
+      children: [
+        {
+          value: "Bathrooms, Kitchens and Laundries",
+          label: "--- Bathrooms, Kitchens and Laundries"
+        },
+        {
+          value: "Bricks and Pavers",
+          label: "--- Bricks and Pavers"
+        },
+        {
+          value: "Builders and Carpenters",
+          label: "--- Builders and Carpenters"
+        },
+        {
+          value: "Concrete, Asphalt and Bitumen Services",
+          label: "--- Concrete, Asphalt and Bitumen Services"
+        },
+        {
+          value: "Demolitions and Asbestos Removal",
+          label: "--- Demolitions and Asbestos Removal"
+        },
+        {
+          value: "Doors and Windows",
+          label: "--- Doors and Windows"
+        },
+        {
+          value: "Earthmoving Services",
+          label: "--- Earthmoving Services"
+        },
+        {
+          value: "Electricians",
+          label: "--- Electricians"
+        },
+        {
+          value: "Equipment and Machinery Hire",
+          label: "--- Equipment and Machinery Hire"
+        },
+        {
+          value: "Fencing - Products and Services",
+          label: "--- Fencing - Products and Services"
+        },
+        {
+          value: "Home Renovations",
+          label: "--- Home Renovations"
+        },
+        {
+          value: "Kit Homes",
+          label: "--- Kit Homes"
+        },
+        {
+          value: "Lattice, Louvres and Slatting",
+          label: "--- Lattice, Louvres and Slatting"
+        },
+        {
+          value: "Marble and Granite - Product and Services",
+          label: "--- Marble and Granite - Product and Services"
+        },
+        {
+          value: "Metal Sales, Fabrication and Services",
+          label: "--- Metal Sales, Fabrication and Services"
+        },
+        {
+          value: "Painters",
+          label: "--- Painters"
+        },
+        {
+          value: "Plasterers",
+          label: "--- Plasterers"
+        },
+        {
+          value: "Plumbers and Gasfitters",
+          label: "--- Plumbers and Gasfitters"
+        },
+        {
+          value: "Roofing and Guttering",
+          label: "--- Roofing and Guttering"
+        },
+        {
+          value: "Signwriting",
+          label: "--- Signwriting"
+        },
+        {
+          value: "Tile Products and Services",
+          label: "--- Tile Products and Services"
+        },
+        {
+          value: "Timber",
+          label: "--- Timber"
+        },
+        {
+          value: "Tree Lopping and Stump Grinding",
+          label: "--- Tree Lopping and Stump Grinding"
+        },
+        {
+          value: "Wall Cladding",
+          label: "--- Wall Cladding"
+        },
+        {
+          value: "Water Equipment, Pumping and Irrigation",
+          label: "--- Water Equipment, Pumping and Irrigation"
+        }
+      ]
+    },
+    {
+      value: "Travel",
+      label: "Travel",
+      children: [
+        {
+          value: "Air Tours and Charters",
+          label: "--- Air Tours and Charters"
+        },
+        {
+          value: "Car Rental Services",
+          label: "--- Car Rental Services"
+        },
+        {
+          value: "Coaches and Buses",
+          label: "--- Coaches and Buses"
+        },
+        {
+          value: "Cruises and Boat Charters",
+          label: "--- Cruises and Boat Charters"
+        },
+        {
+          value: "Currency Exchanges",
+          label: "--- Currency Exchanges"
+        },
+        {
+          value: "Ferries and Water Taxis",
+          label: "--- Ferries and Water Taxis"
+        },
+        {
+          value: "Holidays and Tours",
+          label: "--- Holidays and Tours"
+        },
+        {
+          value: "Parking and Transfers",
+          label: "--- Parking and Transfers"
+        },
+        {
+          value: "Tourist Attractions",
+          label: "--- Tourist Attractions"
+        },
+        {
+          value: "Trains",
+          label: "--- Trains"
+        },
+        {
+          value: "Travel Agencies",
+          label: "--- Travel Agencies"
+        },
+        {
+          value: "Travel Goods",
+          label: "--- Travel Goods"
+        },
+        {
+          value: "Travel Insurance",
+          label: "--- Travel Insurance"
+        }
+      ]
+    }
+  ];
+
+  var options = {
+    dataSources: [{
+      url: 'https://www.data.qld.gov.au/api/3/action/datastore_search?resource_id=33159533-c2ee-4e11-902d-e2d250e2c84c&limit=9000',
+      results: 'result.records',
+    }, ],
+    maps: true,
+    keywordFields: [
+      'website',
+      'discount',
+    ],
+    filterFields: {
+      parentCategory: {
+        type: 'select',
+        label: 'Category',
+        defaultText: 'category',
+        dependents: {
+          businessCategory: {
+            type: 'select',
+            label: 'Subcategory',
+            defaultText: 'subcategory'
+          }
+        }
+      }
+    },
+
+    dataCallback: (data) => {
+      data.forEach(set => {
+        let parentCategory = category_options.find(option => {
+          return option.children && option.children.some(child => child.value === set['Business Category']);
+        });
+        set.parentCategory = parentCategory ? parentCategory.value : '';
+      })
+      return data
+    },
+    resultTemplate: {
+      data: function (results) {
+        return results.map(function (entry) {
+          // Define and prepare markup for results.
+          //console.log(entry);
+          
+          return {
+            outletName: entry.outletName,
+            businessCategory: entry.businessCategory,
+            discount: entry.discount,
+            
+            website: entry["website"],
+            telephoneNumber: entry.telephoneNumber,
+            outletAddress: entry.outletAddress,
+            outletSuburb: entry.outletSuburb,
+            outletPostcode: entry.outletPostcode,
+            
+            australiaWideFlag: entry.australiaWideFlag,
+            overseasFlag: entry.overseasFlag,
+            
+            carerSchemeFlag: entry.carerSchemeFlag,
+            seniorSchemeFlag: entry.seniorSchemeFlag,
+            
+            onlineMailOrderFlag: entry.onlineMailOrderFlag,
+            
+            latitude: entry.latitude,
+            longitude: entry.longitude
+          }
+        });        
+      },
+      markup: function (result) {
+        var returnstring = `
+        <div class="col">
+        <div class="qg-card qg-card__light-theme">
+          <div class="content">
+            <div class="details     card-body">
+              <h3 class="card-title">${result.outletName}</h3>
+              <div class="card-text">
+                <p><strong>Category:</strong> ${result.businessCategory}</p>
+                <p><strong>Discount:</strong> ${result.discount}</p>`;
+        returnstring += returnWebsite(`${result.website}`);
+        returnstring += returnAddress(`${result.outletAddress}`, `${result.outletSuburb}`, `${result.outletPostcode}`);
+        returnstring += getDirection(`${result.latitude}`, `${result.longitude}`);
+        returnstring += `<p><strong>Phone:</strong> <a href="tel:${result.telephoneNumber}">${result.telephoneNumber}</a></p>`
+                
+        returnstring += `</div>
+            </div>`
+        returnstring += `<div class="card-footer">`;
+        returnstring += australiaWideTag(`${result.australiaWideFlag}`)
+        returnstring += overseasTag(`${result.overseasFlag}`)
+        returnstring += carerSchemeTag(`${result.carerSchemeFlag}`)
+        returnstring += seniorSchemeTag(`${result.seniorSchemeFlag}`)
+        returnstring += `</div>
+        </div> 
+        </div>
+        </div>` 
+        return returnstring;
+      },
+    },
+    /*placeholderTemplate: function() {
+      return `
+      <div class="col">
+          <div class="card card-default card-no-action col-12">
+            <div class="card-body">
+              <h3 class="card-title">Search above</h3>
+              <div class="card-text">
+                <p>Use the search options above to find Working for Queensland survey results.</p>
+              </div>
+            </div>
+          </div>
+      </div>`
+    }*/
+  }
+
+  // Create the search tool inside the target element.
+  var searchTool = $('#search-tool').searchTool(options);
+  //addMapsSample();
+
+})(jQuery);
+</script>

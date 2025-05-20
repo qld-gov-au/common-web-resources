@@ -23,25 +23,16 @@
 </head>
 
 <body>
+
     <div class="container">
-        <div id="search-widget"></div>
+        <div id="search-widget-maps"></div>
         <div id="search-tool">
             <div id="results-container"></div>
         </div>
     </div>
-    
+
     <script type="text/javascript">
 
-        function addMapsSample() {
-            var map = L.map('search-widget-maps-sample').setView([51.505, -0.09], 13);
-            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            }).addTo(map);
-            L.marker([51.5, -0.09]).addTo(map)
-                .bindPopup('A pretty CSS popup.<br> Easily customizable.')
-                .openPopup();
-        }
         function australiaWideTag(australiaWideFlag) {
             if (australiaWideFlag == 'Yes') {
                 return `<span class="badge badge-pill qg-tag qg-tag-blue">AUS wide</span>`
@@ -71,7 +62,19 @@
             }
         }
         function getDirection(latitude, longitude) {
-            return '<p><a href="https://www.google.com/maps/dir/?api=1&destination=' + latitude + ',' + longitude + '" target="_blank">Get directions</a></p>';
+            retVal = ''
+            if (latitude != '(blank)' && longitude != '(blank)')
+            retVal = '<p><a href="https://www.google.com/maps/dir/?api=1&destination=' + latitude + ',' + longitude + '" target="_blank">Get directions</a></p>';
+            return retVal;
+        }
+        function returnAddress(address, suburb, postcode)  {
+            returnVal = '';
+            if (address == '(blank)') address = '';
+            if (suburb == "(blank)") suburb = '';
+            if (postcode == "(blank)") postcode = '';
+            if ((address != '') || (suburb != '') || (postcode != ''))
+                returnVal = `<p><strong>Address:</strong> ` + address + " " + suburb + " " + postcode + `</p>`
+            return returnVal;
         }
         function returnWebsite(website) {
             returnVal = ''
@@ -99,7 +102,7 @@
                             url: 'https://www.data.qld.gov.au/api/3/action/datastore_search?resource_id=33159533-c2ee-4e11-902d-e2d250e2c84c&limit=9000',
                             results: 'result.records',
                         }],
-                        maps: false,
+                        maps: true,
                         keywordFields: [
                             'outletName',  // @TODO: add this on Squiz
                             'website',
@@ -150,7 +153,6 @@
                                     return option.children && option.children.some(child => child.value === set['Business Category']);
                                 });
                                 set.parentCategory = parentCategory ? parentCategory.value : '';
-                                
                                 // Add cardType as a new data property based on the record's
                                 // scheme flags
                                 set.cardType = [];
@@ -158,7 +160,7 @@
                                 if (set['Carer Scheme Flag'] === 'Yes') { set.cardType.push('Carers'); }
                                 set.cardType = set.cardType.join(',');                                            
                             })
-
+                            console.log('data in callback :>> ', data);
                             return data
                         },
                         resultTemplate: {
@@ -232,6 +234,21 @@
                 });            
         })(jQuery);
     </script>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""/>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css'rel="stylesheet" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css'rel="stylesheet" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css'rel="stylesheet" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
+<script type="text/javascript" src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
+<script type="text/javascript" src='https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js'></script>
+<script type="text/javascript" src='https://cdnjs.cloudflare.com/ajax/libs/esri-leaflet/3.0.10/esri-leaflet.js'></script>
+<script type="text/javascript" src='https://unpkg.com/esri-leaflet-vector@4.1.0/dist/esri-leaflet-vector.js'></script>
+<script type="text/javascript" src='https://unpkg.com/leaflet.tilelayer.fallback@1.0.4/dist/leaflet.tilelayer.fallback.js'></script>
 
 </body>
 
