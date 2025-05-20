@@ -236,6 +236,7 @@
           if (config.locationSearch?.enabled) {
 
             // Location search text field
+            var locationContainer = $('<div>').addClass('location-container')
             var locationFieldset = $('<fieldset>').attr('id', 'locationSearch-input')
             var locationLabel = $('<label>')
               .attr('for', 'locationSearch-filter')
@@ -251,7 +252,7 @@
               .val(config.locationSearch?.defaultValue || '')
           
             locationFieldset.append(locationLabel, locationInput)
-            form.append(locationFieldset)
+            locationContainer.append(locationFieldset)
           
             // Distance radius dropdown field
             if (config.locationSearch?.distanceEnabled) {
@@ -266,7 +267,7 @@
                   id: 'distanceRadius-filter',
                   name: 'distanceRadius',
                 })
-                .addClass('form-control location-filter')
+                .addClass('form-control form-text location-filter')
           
               var radiusOptions = config.locationSearch?.distanceRadius?.options || ['', 5, 10, 15, 20]
               var defaultRadius = config.locationSearch?.distanceRadius?.default || ''
@@ -280,8 +281,11 @@
               })
           
               distanceFieldset.append(distanceLabel, distanceSelect)
-              form.append(distanceFieldset)
+              locationContainer.append(distanceFieldset)
             }
+
+            // Append location container to the form
+            form.append(locationContainer)
           }
 
           // Build other filter fields

@@ -98,3 +98,18 @@
     text-decoration: none !important;
   }
 }
+
+.location-container {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 10px;
+
+  fieldset#locationSearch-input {
+    flex-grow: 1;
+  }
+  
+  fieldset#distanceRadius-input {
+    flex-grow: 0;
+  }
+}
+
