@@ -871,7 +871,7 @@
               results = config.filterCallback(results)
             }
 
-            if (config.map) {
+            if (config.maps) {
               clearMarkers();
               // add layers
               addMarkers(results);
@@ -954,7 +954,7 @@
             callback: function (data, pagination) {
               searchTool.template.pageSummary(pagination, data.length)
               searchTool.template.printResults(data)
-              
+
               // @DEBUG
               $('#results-container').append($('.page-summary'));
               $('#results-container').append($('.results'));
