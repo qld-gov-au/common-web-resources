@@ -94,26 +94,26 @@
 /*# sourceMappingURL=data-search-widget.css.map */
 
 /* @DEBUG LOCALHOST only */
-#search-tool {
+#search-tool.debug {
   display: flex;
   flex-direction: row-reverse;
   column-gap: 20px;
   margin-top: 20px;
 }
-#search-tool #results-container, #search-tool .qg-search-widget-qgds {
+#search-tool.debug #results-container, #search-tool.debug .qg-search-widget-qgds {
   width: 50%;
 }
-#search-tool .qg-search-widget-qgds {
+#search-tool.debug .qg-search-widget-qgds {
   margin-top: 15px;
 }
-#search-tool .results {
+#search-tool.debug .results {
   width: 100%;
   margin: 0;
 }
-#search-tool .pager {
+#search-tool.debug .pager {
   margin-top: 20px;
 }
-.page-summary {
+#search-tool.debug .page-summary {
   padding: 10px;
   margin-bottom: 30px;
   background-color: #dedede;
