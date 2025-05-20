@@ -956,9 +956,9 @@
               searchTool.template.printResults(data)
 
               // @DEBUG
-              $('#results-container').append($('.page-summary'));
-              $('#results-container').append($('.results'));
-              $('#results-container').append($('.pager'));
+              // $('#results-container').append($('.page-summary'));
+              // $('#results-container').append($('.results'));
+              // $('#results-container').append($('.pager'));
               // End of: @DEBUG
 
               $('.pagination li').addClass('page-item')
