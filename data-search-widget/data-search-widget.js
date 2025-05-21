@@ -695,8 +695,10 @@
               searchTool.template.paginate(data)
             }
             //when reset
-            clearMarkers();
-            addMarkers(globalData);
+            if (config.map) {
+              clearMarkers();
+              addMarkers(globalData);
+            }
           },
           filterItems: async function (items) {
             var context = '#' + uniqueId
@@ -869,9 +871,11 @@
               results = config.filterCallback(results)
             }
 
-            clearMarkers();
-            // add layers
-            addMarkers(results);
+            if (config.map) {
+              clearMarkers();
+              // add layers
+              addMarkers(results);
+            }
 
             // Display filtered results
             $('.results').empty() // Clear previous results
