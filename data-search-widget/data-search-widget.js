@@ -769,6 +769,7 @@
             var distanceRadius = parseFloat($('#distanceRadius-filter').val() || '');
             var locationSuburb = '';
             var locationPostcode = '';
+            var filteredByLocation = [];
 
             if (locationInput) {
 
@@ -785,7 +786,7 @@
                 var postcodeField = config.locationSearch.matchFields.postcode || 'postcode';
 
                 // String matching item's suburb or postcode with user input.
-                var filteredByLocation = filteredItems.filter(function (item) {
+                filteredByLocation = filteredItems.filter(function (item) {
                   if (!item[suburbField] && !item[postcodeField]) return false;
 
                   // Postcode - check if input value matches with datasource's postcode field
@@ -798,13 +799,10 @@
                   }
                 });
 
-                // Set the global filteredItems with the filteredByLocation (items filtered by location and sorted by distance).
-                filteredItems = filteredByLocation;
-
               // If distanceRadius is set, filter by latitude and longitude.
               } else if (distanceRadius > 0) {
 
-                await (async function () {
+                filteredByLocation = await (async function () {
                   try {
                     const response = await getLatLonCKAN(locationSuburb, locationPostcode);
 
@@ -813,33 +811,35 @@
                       const lat = parseFloat(response.lat);
                       const lon = parseFloat(response.lon);
 
-                      const filteredByDistance = filteredItems
-                      .filter(function (item) {
-                        if (!item.latitude || !item.longitude) return false;
-                        const itemLat = parseFloat(item.latitude);
-                        const itemLon = parseFloat(item.longitude);
+                      return filteredItems
+                        .filter(function (item) {
+                          if (!item.latitude || !item.longitude) return false;
+                          const itemLat = parseFloat(item.latitude);
+                          const itemLon = parseFloat(item.longitude);
 
-                        // Calculate the distance using the haversine formula
-                        const distance = haversineDistance([lat, lon], [itemLat, itemLon]);
+                          // Calculate the distance using the haversine formula
+                          const distance = haversineDistance([lat, lon], [itemLat, itemLon]);
 
-                        item.distance = distance; // Add distance to item for sorting
-                        return distance <= distanceRadius;
-                      })
-                      .sort(function (a, b) {
-                        return a.distance - b.distance; // Sort by distance
-                      });
+                          item.distance = distance; // Add distance to item for sorting
+                          return distance <= distanceRadius;
+                        })
+                        .sort(function (a, b) {
+                          return a.distance - b.distance; // Sort by distance
+                        });
 
-                      // Set the global filteredItems with the filteredByLocation (items filtered by location and sorted by distance).
-                      filteredItems = filteredByDistance;
                     } else {
-                      errorMessage = "Unable to find location. Please try again.";
+                      errorMessage = `Unable to find <strong>${locationInput}</strong>. Please try another location.`;
+                      return [];
                     }
                   } catch (error) {
                     console.error('Error fetching location data:', error);
-                    errorMessage = "An error occurred while fetching location data.";
+                    errorMessage = "An error occurred while fetching location data. Please try again.";
+                    return [];
                   }
                 })(); // Ensure this is awaited
-              };
+              }
+
+              filteredItems = filteredByLocation;
             }
 
             // Keyword search.
