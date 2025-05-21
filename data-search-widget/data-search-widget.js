@@ -1251,15 +1251,6 @@
   let map;
   let globalClusters;
 
-  function addCss(src, callback) {
-    const link = document.createElement('link');
-    link.src = src;
-    link.rel = "stylesheet";
-    link.type = "text/css";
-    link.onload = callback;
-    document.head.appendChild(link);
-  }
-
   function addLeafletCSS(src) {
     $('<link>', {
       rel: 'stylesheet',
