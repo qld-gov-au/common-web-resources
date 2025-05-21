@@ -40,6 +40,21 @@
 .qg-search-widget .actions button {
   margin-right: 1rem !important;
 }
+.qg-search-widget .location-container {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 10px;
+  margin-bottom: 1.5rem;
+}
+.qg-search-widget .location-container fieldset#locationSearch-input {
+  flex-grow: 1;
+}
+.qg-search-widget .location-container fieldset#distanceRadius-input {
+  flex-grow: 0;
+}
+.qg-search-widget .location-container fieldset#distanceRadius-input select {
+  padding: 0.5em 0.7em;
+}
 
 .page-summary {
   margin: 1rem 0;
@@ -77,18 +92,6 @@
 .accordion .qg-search-widget ~ .results .qg-card .collapse:hover,
 .qg-accordion .qg-search-widget ~ .results .qg-card .collapse:hover {
   text-decoration: none !important;
-}
-
-.location-container {
-  display: flex;
-  flex-wrap: wrap;
-  column-gap: 10px;
-}
-.location-container fieldset#locationSearch-input {
-  flex-grow: 1;
-}
-.location-container fieldset#distanceRadius-input {
-  flex-grow: 0;
 }
 
 /*# sourceMappingURL=data-search-widget.css.map */
