@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Data Search Tool - Preview</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/layout.css" />
+    <link rel="stylesheet" href="/css/data-search-widget.css" />
+
+    <style>
+        body {
+            padding: 2rem;
+        }
+    </style>
+
+    <script src="/node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="/node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/data-search-widget.js"></script>
+    <script src="/utils/helpers.js"></script>
+</head>
+
+<body>
+
+    <div id="search-widget"></div>
+    <div id="search-tool"></div>
+
+    <script type="text/javascript">
+
+        function australiaWideTag(australiaWideFlag) {
+            if (australiaWideFlag == 'Yes') {
+                return `<span class="badge badge-pill qg-tag qg-tag-blue">AUS wide</span>`
+            } else {
+                return '';
+            }
+        }
+        function overseasTag(overseasFlag) {
+            if (overseasFlag == 'Yes') {
+                return `<span class="badge badge-pill qg-tag qg-tag-green">Overseas</span>`
+            } else {
+                return '';
+            }
+        }
+        function carerSchemeTag(carerSchemeFlag) {
+            if (carerSchemeFlag == 'Yes') {
+                return `<span class="badge badge-pill qg-tag qg-tag-yellow">Carer</span>`
+            } else {
+                return '';
+            }
+        }
+        function seniorSchemeTag(seniorSchemeFlag) {
+            if (seniorSchemeFlag == 'Yes') {
+                return `<span class="badge badge-pill qg-tag qg-tag-purple">Senior</span>`
+            } else {
+                return '';
+            }
+        }
+        function getDirection(latitude, longitude) {
+            return '<p><a href="https://www.google.com/maps/dir/?api=1&destination=' + latitude + ',' + longitude + '" target="_blank">Get directions</a></p>';
+        }
+        function returnWebsite(website) {
+            returnVal = ''
+            if (website != '(blank)') {
+                returnVal += `<p><strong>Website:</strong> <a href=`;
+                if (website.indexOf("http") < 0) {
+                    returnVal += `"http://`
+                }
+                returnVal += website + `">` + website + `</a></p>`
+            }
+            return returnVal;
+        }
+
+        (function ($) {
+            var options = {
+                dataSources: [{
+                    url: 'https://www.data.qld.gov.au/api/3/action/datastore_search?resource_id=33159533-c2ee-4e11-902d-e2d250e2c84c&limit=9000',
+                    results: 'result.records',
+                },],
+                maps: true,
+                keywordFields: [
+                    'outletName',
+                    'website',
+                    'discount',
+                ],
+                locationSearch: {
+                    enabled: true,
+                    label: 'Suburb or postcode',
+                    matchFields: {
+                        suburb: 'outletSuburb',
+                        postcode: 'outletPostcode'
+                    },
+                    distanceEnabled: true,
+                    distanceInput: {
+                        label: 'Distance Around (km)',
+                        default: 5,
+                    }
+                },
+                resultTemplate: {
+                    data: function (results) {
+                        return results.map(function (entry) {
+                            // Define and prepare markup for results.
+                            //console.log(entry);
+
+                            return {
+                                outletName: entry.outletName,
+                                businessCategory: entry.businessCategory,
+                                discount: entry.discount,
+
+                                website: entry["website"],
+                                telephoneNumber: entry.telephoneNumber,
+                                outletAddress: entry.outletAddress,
+                                outletSuburb: entry.outletSuburb,
+                                outletPostcode: entry.outletPostcode,
+
+                                australiaWideFlag: entry.australiaWideFlag,
+                                overseasFlag: entry.overseasFlag,
+
+                                carerSchemeFlag: entry.carerSchemeFlag,
+                                seniorSchemeFlag: entry.seniorSchemeFlag,
+
+                                onlineMailOrderFlag: entry.onlineMailOrderFlag,
+
+                                latitude: entry.latitude,
+                                longitude: entry.longitude
+                            }
+                        });
+                    },
+                    markup: function (result) {
+                        var returnstring = `
+                        <div class="col">
+                            <div class="qg-card qg-card__light-theme">
+                                <div class="content">
+                                    <div class="details     card-body">
+                                    <h3 class="card-title">${result.outletName}</h3>
+                                    <div class="card-text">
+                                        <p><strong>Category:</strong> ${result.businessCategory}</p>
+                                        <p><strong>Discount:</strong> ${result.discount}</p>`;
+                                            returnstring += returnWebsite(`${result.website}`);
+                                            returnstring +=
+                                                `<p><strong>Address:</strong> ${result.outletAddress} ${result.outletSuburb} ${result.outletPostcode}</p>`
+                                            returnstring += getDirection(`${result.latitude}`, `${result.longitude}`);
+                                            returnstring += `<p><strong>Phone:</strong> <a href="tel:${result.telephoneNumber}">${result.telephoneNumber}</a></p>`
+
+                                            returnstring += `</div>
+                                    </div>`
+                                            returnstring += `<div class="card-footer">`;
+                                            returnstring += australiaWideTag(`${result.australiaWideFlag}`)
+                                            returnstring += overseasTag(`${result.overseasFlag}`)
+                                            returnstring += carerSchemeTag(`${result.carerSchemeFlag}`)
+                                            returnstring += seniorSchemeTag(`${result.seniorSchemeFlag}`)
+                                            returnstring += `</div>
+                                </div> 
+                            </div>
+                        </div>`;
+                        returnstring = `<p><strong>${result.outletName}</strong> - ${result.outletSuburb} - ${result.outletPostcode}</p>`;
+
+                        return returnstring;
+                    },
+                },
+                /*placeholderTemplate: function() {
+                return `
+                <div class="col">
+                    <div class="card card-default card-no-action col-12">
+                        <div class="card-body">
+                        <h3 class="card-title">Search above</h3>
+                        <div class="card-text">
+                            <p>Use the search options above to find Working for Queensland survey results.</p>
+                        </div>
+                        </div>
+                    </div>
+                </div>`
+                }*/
+            }
+
+            // Create the search tool inside the target element.
+            var searchTool = $('#search-tool').searchTool(options);
+
+        })(jQuery);
+    </script>
+
+</body>
+
+</html>
