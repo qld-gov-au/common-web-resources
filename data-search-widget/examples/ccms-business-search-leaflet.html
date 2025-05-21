@@ -1,0 +1,172 @@
+---
+layout: layout.njk
+---
+
+<div class="container">
+    <div id="search-tool"></div>
+</div>
+
+<script type="text/javascript">
+
+function australiaWideTag(australiaWideFlag) {
+    if (australiaWideFlag == 'Yes') {
+        return `<span class="badge badge-pill qg-tag qg-tag-blue">AUS wide</span>`
+    } else {
+        return '';
+    }
+}
+function overseasTag(overseasFlag) {
+    if (overseasFlag == 'Yes') {
+        return `<span class="badge badge-pill qg-tag qg-tag-green">Overseas</span>`
+    } else {
+        return '';
+    }
+}
+function carerSchemeTag(carerSchemeFlag) {
+    if (carerSchemeFlag == 'Yes') {
+        return `<span class="badge badge-pill qg-tag qg-tag-yellow">Carer</span>`
+    } else {
+        return '';
+    }
+}
+function seniorSchemeTag(seniorSchemeFlag) {
+    if (seniorSchemeFlag == 'Yes') {
+        return `<span class="badge badge-pill qg-tag qg-tag-purple">Senior</span>`
+    } else {
+        return '';
+    }
+}
+function getDirection(latitude, longitude) {
+    retVal = ''
+    if (latitude != '(blank)' && longitude != '(blank)')
+    retVal = '<p><a href="https://www.google.com/maps/dir/?api=1&destination=' + latitude + ',' + longitude + '" target="_blank">Get directions</a></p>';
+    return retVal;
+}
+function returnAddress(address, suburb, postcode)  {
+    returnVal = '';
+    if (address == '(blank)') address = '';
+    if (suburb == "(blank)") suburb = '';
+    if (postcode == "(blank)") postcode = '';
+    if ((address != '') || (suburb != '') || (postcode != ''))
+        returnVal = `<p><strong>Address:</strong> ` + address + " " + suburb + " " + postcode + `</p>`
+    return returnVal;
+}
+function returnWebsite(website) {
+    returnVal = ''
+    if (website != '(blank)') {
+        returnVal += `<p><strong>Website:</strong> <a href=`;
+        if (website.indexOf("http") < 0) {
+            returnVal += `"http://`
+        }
+        returnVal += website + `">` + website + `</a></p>`
+    }
+    return returnVal;
+}
+
+let category_options = [];
+(function($) {
+  // Get categories from JSON file
+  $.getJSON('/examples/ccms-business-categories.json')
+    .done(function (category_options) {
+      var options = {
+        dataSources: [{
+          url: 'https://www.data.qld.gov.au/api/3/action/datastore_search?resource_id=33159533-c2ee-4e11-902d-e2d250e2c84c&limit=9000',
+          results: 'result.records',
+        }, ],
+        maps: true,
+        keywordFields: [
+          'website',
+          'discount',
+        ],
+        filterFields: {
+          parentCategory: {
+            type: 'select',
+            label: 'Category',
+            defaultText: 'category',
+            dependents: {
+              businessCategory: {
+                type: 'select',
+                label: 'Subcategory',
+                defaultText: 'subcategory'
+              }
+            }
+          }
+        },
+        dataCallback: (data) => {
+          data.forEach(set => {
+            let parentCategory = category_options.find(option => {
+              return option.children && option.children.some(child => child.value === set['Business Category']);
+            });
+            set.parentCategory = parentCategory ? parentCategory.value : '';
+          })
+          return data
+        },
+        resultTemplate: {
+          data: function (results) {
+            return results.map(function (entry) {
+              // Define and prepare markup for results.
+              //console.log(entry);
+              
+              return {
+                outletName: entry.outletName,
+                businessCategory: entry.businessCategory,
+                discount: entry.discount,
+                
+                website: entry["website"],
+                telephoneNumber: entry.telephoneNumber,
+                outletAddress: entry.outletAddress,
+                outletSuburb: entry.outletSuburb,
+                outletPostcode: entry.outletPostcode,
+                
+                australiaWideFlag: entry.australiaWideFlag,
+                overseasFlag: entry.overseasFlag,
+                
+                carerSchemeFlag: entry.carerSchemeFlag,
+                seniorSchemeFlag: entry.seniorSchemeFlag,
+                
+                onlineMailOrderFlag: entry.onlineMailOrderFlag,
+                
+                latitude: entry.latitude,
+                longitude: entry.longitude
+              }
+            });        
+          },
+          markup: function (result) {
+            var returnstring = `
+            <div class="col">
+            <div class="qg-card qg-card__light-theme">
+              <div class="content">
+                <div class="details     card-body">
+                  <h3 class="card-title">${result.outletName}</h3>
+                  <div class="card-text">
+                    <p><strong>Category:</strong> ${result.businessCategory}</p>
+                    <p><strong>Discount:</strong> ${result.discount}</p>`;
+            returnstring += returnWebsite(`${result.website}`);
+            returnstring += returnAddress(`${result.outletAddress}`, `${result.outletSuburb}`, `${result.outletPostcode}`);
+            returnstring += getDirection(`${result.latitude}`, `${result.longitude}`);
+            returnstring += `<p><strong>Phone:</strong> <a href="tel:${result.telephoneNumber}">${result.telephoneNumber}</a></p>`
+                    
+            returnstring += `</div>
+                </div>`
+            returnstring += `<div class="card-footer">`;
+            returnstring += australiaWideTag(`${result.australiaWideFlag}`)
+            returnstring += overseasTag(`${result.overseasFlag}`)
+            returnstring += carerSchemeTag(`${result.carerSchemeFlag}`)
+            returnstring += seniorSchemeTag(`${result.seniorSchemeFlag}`)
+            returnstring += `</div>
+            </div> 
+            </div>
+            </div>` 
+            return returnstring;
+          },
+        },
+      }
+      // Create the search tool inside the target element.
+      var searchTool = $('#search-tool').searchTool(options);
+    })
+    .fail(function (jqxhr, textStatus, error) {
+        var err = textStatus + ", " + error;
+        console.log("Request Failed: " + err);
+    });
+})(jQuery);
+</script>
