@@ -1,5 +1,5 @@
 {
-  "name": "csv-search-widget",
+  "name": "data-search-widget",
   "version": "1.0.0",
   "description": "",
   "main": "data-search-widget.js",
@@ -13,10 +13,10 @@
   "license": "ISC",
   "devDependencies": {
     "@11ty/eleventy": "^2.0.1",
-    "sass": "^1.87.0"
+    "sass": "^1.87.0",
+    "bootstrap": "^5.0.0"
   },
   "dependencies": {
-    "bootstrap": "^5.0.0",
     "jquery": "^3.7.0"
   }
 }
