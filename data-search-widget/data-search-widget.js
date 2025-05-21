@@ -283,6 +283,7 @@
               title = config.title.length ? $('<h2>').text(config.title) : '',
               form = $('<form>').addClass('search-form').attr('novalidate', '')
 
+          // Build Keywords Search input field
           if (config.keywords) {
             var kwFieldset = $('<fieldset>').attr('id', 'keywords-input')
             var kwLabel = $('<label>').attr('for', 'keywords-filter').text('Keywords').addClass('qld-text-input-label')
@@ -291,6 +292,63 @@
             form.append(kwFieldset)
           }
 
+          // Build Location Search input fields
+          if (config.locationSearch?.enabled) {
+
+            // Location search text field
+            var locationContainer = $('<div>').addClass('location-container')
+            var locationFieldset = $('<fieldset>').attr('id', 'locationSearch-input')
+            var locationLabel = $('<label>')
+              .attr('for', 'locationSearch-filter')
+              .addClass('qld-text-input-label')
+              .text(config.locationSearch?.label || 'Suburb / Postcode')
+            var locationInput = $('<input>')
+              .attr({
+                id: 'locationSearch-filter',
+                name: 'locationSearch',
+                type: 'text',
+              })
+              .addClass('form-control form-text locationSearch location-filter')
+              .val(config.locationSearch?.defaultValue || '')
+          
+            locationFieldset.append(locationLabel, locationInput)
+            locationContainer.append(locationFieldset)
+          
+            // Distance radius dropdown field
+            if (config.locationSearch?.distanceEnabled) {
+              var distanceFieldset = $('<fieldset>').attr('id', 'distanceRadius-input')
+              var distanceLabel = $('<label>')
+                .attr('for', 'distanceRadius-filter')
+                .addClass('qld-text-input-label')
+                .text(config.locationSearch?.distanceRadius?.label || 'Distance Around (km)')
+          
+              var distanceSelect = $('<select>')
+                .attr({
+                  id: 'distanceRadius-filter',
+                  name: 'distanceRadius',
+                })
+                .addClass('form-control form-text location-filter')
+          
+              var radiusOptions = config.locationSearch?.distanceRadius?.options || ['', 5, 10, 15, 20]
+              var defaultRadius = config.locationSearch?.distanceRadius?.default || ''
+          
+              radiusOptions.forEach(function (value) {
+                var option = $('<option>').val(value).text(value ? `${value} km` : '— Select distance —')
+                if (value == defaultRadius) {
+                  option.attr('selected', true)
+                }
+                distanceSelect.append(option)
+              })
+          
+              distanceFieldset.append(distanceLabel, distanceSelect)
+              locationContainer.append(distanceFieldset)
+            }
+
+            // Append location container to the form
+            form.append(locationContainer)
+          }
+
+          // Build other filter fields
           if (config.filterFields) {
             var filtersContainer = $('<fieldset>').attr('id', 'filters')
             form.append(filtersContainer)
@@ -552,8 +610,8 @@
               // are checked against conditional value/s.
             }
             else {
-              // If no default option is specified, add a placeholder option.
-              if (!settings.default) {
+              // If no default option is specified (undefined, null, empty string, or false), add a placeholder option.
+              if (settings.default == null || settings.default === '') {
                 const optionText = settings.defaultText || name,
                   defaultText = `—Select a${$.inArray(optionText.slice(0, 1), ['a', 'e', 'i', 'o', 'u']) > -1 ? 'n ' : ' '}${optionText}—`,
                   defaultOption = $('<option selected value>').text(defaultText)
@@ -580,12 +638,11 @@
 
                 return element
               })
-
               select.append(template)
               return select
             }
             return false
-          },
+          }
         },
         results: function () {
           return $('<div>').addClass('results row row-cols-1 g-4')
@@ -641,12 +698,13 @@
             clearMarkers();
             addMarkers(globalData);
           },
-          filterItems: function (items) {
+          filterItems: async function (items) {
             var context = '#' + uniqueId
             var keywords = $('.search-keywords').val() || ''
-            var filters = $('input:not(.search-keywords):not([type=checkbox]):not([type=radio]), select:not([multiple]), input[type=radio]:checked', context)
+            var filters = $('input:not(.search-keywords):not(.location-filter):not([type=checkbox]):not([type=radio]), select:not([multiple]):not(.location-filter), input[type=radio]:checked', context)
             var multiFilters = $('.form-checkboxes, select[multiple]', context)
             var results = []
+            var errorMessage = "We couldn't find any matching results.";
             var fieldsArray = searchTool.flatFilterFields
 
             // Filter out empty entries and extract only the properties needed for filtering.
@@ -700,6 +758,89 @@
               filteredItems = items
             }
 
+            // Location search and distance radius
+            //   When distanceRadius is NOT set,
+            //      match suburb / postcode based on item.outlet_postcode or item.outlet_suburb
+            //   When distanceRadius is set,
+            //      match item.latitude and item.longitude to the locationInput lat/lon
+            var locationInput = $('#locationSearch-filter').val() || '';
+            var distanceRadius = parseFloat($('#distanceRadius-filter').val() || '');
+            var locationSuburb = '';
+            var locationPostcode = '';
+            var filteredByLocation = [];
+
+            if (locationInput) {
+
+              // If input value is a 4 digit number, set as postcode.
+              if (locationInput.match(/^\d{4}$/)) {
+                locationPostcode = locationInput;
+              } else {
+                locationSuburb = locationInput;
+              }
+
+              if (!distanceRadius) {
+
+                var suburbField = config.locationSearch.matchFields.suburb || 'suburb';
+                var postcodeField = config.locationSearch.matchFields.postcode || 'postcode';
+
+                // String matching item's suburb or postcode with user input.
+                filteredByLocation = filteredItems.filter(function (item) {
+                  if (!item[suburbField] && !item[postcodeField]) return false;
+
+                  // Postcode - check if input value matches with datasource's postcode field
+                  if (locationPostcode) {
+                    return item[postcodeField] && item[postcodeField].toString().includes(locationPostcode);
+
+                  // Suburb - check if input value matches with datasource's suburb field
+                  } else {
+                    return item[suburbField] && item[suburbField].toLowerCase().includes(locationSuburb.toLowerCase());
+                  }
+                });
+
+              // If distanceRadius is set, filter by latitude and longitude.
+              } else if (distanceRadius > 0) {
+
+                filteredByLocation = await (async function () {
+                  try {
+                    const response = await getLatLonCKAN(locationSuburb, locationPostcode);
+
+                    // Check if the response contains valid latitude and longitude
+                    if (response && response.lat && response.lon) {
+                      const lat = parseFloat(response.lat);
+                      const lon = parseFloat(response.lon);
+
+                      return filteredItems
+                        .filter(function (item) {
+                          if (!item.latitude || !item.longitude) return false;
+                          const itemLat = parseFloat(item.latitude);
+                          const itemLon = parseFloat(item.longitude);
+
+                          // Calculate the distance using the haversine formula
+                          const distance = haversineDistance([lat, lon], [itemLat, itemLon]);
+
+                          item.distance = distance; // Add distance to item for sorting
+                          return distance <= distanceRadius;
+                        })
+                        .sort(function (a, b) {
+                          return a.distance - b.distance; // Sort by distance
+                        });
+
+                    } else {
+                      errorMessage = `Unable to find <strong>${locationInput}</strong>. Please try another location.`;
+                      return [];
+                    }
+                  } catch (error) {
+                    console.error('Error fetching location data:', error);
+                    errorMessage = "An error occurred while fetching location data. Please try again.";
+                    return [];
+                  }
+                })(); // Ensure this is awaited
+              }
+
+              filteredItems = filteredByLocation;
+            }
+
+            // Keyword search.
             if (keywords.length) {
               if (keywords.indexOf(' ')) {
                 var terms = keywords.split(' ')
@@ -711,8 +852,7 @@
               else {
                 keywords = new RegExp(keywords, 'i')
               }
-
-              var results = filteredItems.filter(function (item) {
+              results = filteredItems.filter(function (item) {
                 var searchFields = $.map(config.keywordFields, function (field) {
                   return item[field]
                 }).join(' ')
@@ -720,7 +860,7 @@
                 return keywords.test(searchFields)
               })
             }
-            else {
+            else if (filteredItems.length > 0) {
               results = filteredItems
             }
 
@@ -733,15 +873,16 @@
             // add layers
             addMarkers(results);
 
-            $('.results').empty()
+            // Display filtered results
+            $('.results').empty() // Clear previous results
+
             if (results.length) {
               searchTool.template.paginate(results)
-            }
-            else {
+            } else {
               $('.results').append(
                 '<div id="no-results">' +
                 '<h3>No results found</h3>' +
-                '<p>We couldn\'t find any matching results.</p>' +
+                '<p>' + errorMessage + '</p>' +
                 '</div>')
               $('.page-summary, .pager').hide()
             }
@@ -1010,6 +1151,20 @@
   $.fn.searchTool.defaults = {
     title: 'Search',
     keywords: true,
+    locationSearch: {
+      enabled: false,
+      label: 'Suburb or postcode',
+      matchFields: {
+        suburb: 'suburb',
+        postcode: 'postcode'
+      },
+      distanceEnabled: true,
+      distanceRadius: {
+        label: 'Distance radius (km)',
+        options: ['', 5, 10, 15, 20],
+        default: '',
+      }
+    },
     submitLabel: 'Search', // Text for submit button.
     resetLabel: 'Clear', // Text for reset button.
     hideSearchWidget: false, // Option to not display search filters.
