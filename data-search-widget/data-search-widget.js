@@ -695,7 +695,7 @@
               searchTool.template.paginate(data)
             }
             //when reset
-            if (config.map) {
+            if (config.maps) {
               clearMarkers();
               addMarkers(globalData);
             }
@@ -871,7 +871,7 @@
               results = config.filterCallback(results)
             }
 
-            if (config.map) {
+            if (config.maps) {
               clearMarkers();
               // add layers
               addMarkers(results);
