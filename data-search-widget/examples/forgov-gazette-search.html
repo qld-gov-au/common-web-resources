@@ -1,0 +1,216 @@
+---
+layout: layout.njk
+---
+
+<div id="gazette-search-tool"></div>
+
+<script>
+(function ($) {
+    // Global variables
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    const typeOfGazette = {
+        "Gazette": "Gazettes",
+        "Extraordinary": "Extraordinary gazettes",
+        "Index": "Index listings"
+    }
+
+    // Search widget config
+    let options = {
+        dataSources: [
+            {
+            url: 'https://www.publications.qld.gov.au/api/3/action/package_search?fq=tags:(Gazettes OR gazettes)&rows=1000',
+            results: 'result.results'
+            },
+        ],
+        dataCallback: (data) => {
+            data.forEach(set => {
+            let dateRegex = /(\w+) (\d{4})$/
+            let displayDateRegex = /(\d+) (\w+) (\d{4})/
+            let volRegex = /(?:Volumes?.*?|Vol\. No\.) (\d+)/i
+            let numRegex = /gazettes?(?: No\.)? (\d+[-–]?\d*)/i
+            let pageRegex = /\(pages? ?(\d+[-–]?\d*)/
+            let companionGuideRegex = /Companion Guide/
+
+            // Month and Year properties
+            let regexMonth = set.title.match(dateRegex)[1]
+            let regexYear = set.title.match(dateRegex)[2]
+
+            set.month = ""
+            if (months.includes(regexMonth)) {
+                set.month = regexMonth
+            }
+            set.year = regexYear
+
+            set.resources.forEach(resource => {
+                // Companion guide boolean property
+                let regexCompanionGuide = companionGuideRegex.test(resource.description)
+                if (regexCompanionGuide) {
+                resource.companionGuide = true
+                } else {
+                resource.companionGuide = false
+                }
+
+                // Function for page, no. and volume properties
+                const regexProperty = (regexKey, propertyName, matchIndex = 1) => {
+                let matchRegex = resource.description.match(regexKey)
+                if (matchRegex && matchRegex.length > 1) {
+                    resource[propertyName] = matchRegex[matchIndex]
+                }
+                else {
+                    resource[propertyName] = null
+                }
+                }
+
+                regexProperty(pageRegex, "page")
+                regexProperty(numRegex, "number")
+                regexProperty(volRegex, "volume")
+                regexProperty(displayDateRegex, "date", 0)
+
+            }
+            )
+
+            set.volumes = set.resources
+                .map(resource => resource.volume)
+                .filter((volume, i, array) => !!volume && i == array.indexOf(volume))
+                .join()
+
+            let tagArray = ["Extraordinary", "Index"]
+            for (const tag in set.tags) {
+                set.gazetteType = `Gazette`
+                let tagName = set.tags[tag].name
+
+                if (tagArray.includes(searchTool.helpers.toTitleCase(tagName))) {
+                set.gazetteType = searchTool.helpers.toTitleCase(tagName)
+                break
+                }
+            }
+            });
+
+            return data
+        },
+        resultTemplate: {
+            data: function (results) {
+            return results.map(function (entry) {
+                return {
+                name: entry.title,
+                organization: entry.organization,
+                editions: entry.resources,
+                tags: entry.tags,
+                type: entry.gazetteType
+                }
+            });
+            },
+            markup: function (result) {
+            let editions_list = result.editions.map(edition => {
+                let prelink = edition.date ? edition.date : edition.name,
+                    fileType = edition.format.charAt() === '.' ? edition.format.slice(1) : edition.format,
+                    fileSummary = ` (${fileType.toUpperCase()}, ${searchTool.helpers.readableFileSize(edition.size)})`
+                if (result.type === "Index") {
+                if (edition.companionGuide) {
+                    return `<li><a href="${edition.url}">${edition.name}${fileSummary}</a></li>`
+                }
+                else {
+                    prelink = edition.name
+                }
+                }
+                return `<li>${prelink} <a href="${edition.url}">
+                ${edition.volume ? `Volume ${edition.volume}` : ""} ${edition.number ? `Gazette No. ${edition.number}` : ""} ${edition.page ? `Pages ${edition.page}` : ""}${fileSummary}</a></li>`
+            }
+            )
+            editions_list = editions_list.join('')
+
+            let tags_list = result.tags.map(tag => {
+                return `${tag.display_name}`
+            }
+            )
+            tags_list = tags_list.join(', ')
+
+            return `
+            <div class="col">
+                <div class="card card-default default card-multi-action">
+                <div class="card-body">
+                    <h3 class="card-title">${result.name}</h3>
+                    <div class="card-text">
+                    <ul>${editions_list}</ul>
+                    </div>
+                </div>
+                </div>
+            </div>
+            `
+            }
+        },
+        noResultsTemplate: function () {
+            let gazetteTypeFilter = document.querySelector('#gazetteType-filter'),
+                monthFilter = document.querySelector('#month-filter')
+
+            if (gazetteTypeFilter.value === 'Index' && !!monthFilter.value) {
+            return `
+            <div class="col">
+                <div class="alert alert-danger">
+                <p>The Month filter and index listings can't be used together. Please remove one and try again.</p>
+                </div>
+            </div>
+            `
+            }
+            
+            return `
+            <div class="col">
+            <div class="card card-default default card-multi-action">
+                <div class="card-body">
+                <h3 class="card-title">No results found</h3>
+                <div class="card-text">
+                    <p>We couldn't find any matching results.</p>
+                </div>
+                </div>
+            </div>
+            </div>
+            `
+        },
+        keywords: false,
+        keywordFields: [
+            "title",
+            "description",
+            "name"
+        ],
+        filterFields: {
+            gazetteType: {
+            options: typeOfGazette,
+            type: 'select',
+            multi: true,
+            label: "Gazette type",
+            defaultText: "gazette type"
+            },
+            year: {
+            type: 'select',
+            sort: 'reverse',
+            multi: true,
+            label: "Year"
+            },
+            month: {
+            options: months,
+            type: 'select',
+            sort: false,
+            multi: true,
+            label: "Month",
+            hint: "(Gazettes and extraordinary gazettes only)"
+            },
+            volumes: {
+            type: 'select',
+            multi: true,
+            label: "Volume",
+            defaultText: "volume",
+            data: {
+                type: 'array',
+                separator: ','
+            },
+            sort: 'numeric'
+            }
+        },
+        sortFields: ['-year'],
+        pagination: { // Configuration options for pagination.js.
+            pageSize: 20,
+        },
+    }
+    let searchTool = $('#gazette-search-tool').searchTool(options);
+})(jQuery);
+</script>

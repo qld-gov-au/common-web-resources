@@ -1150,7 +1150,12 @@
           var month = months[dateComponents[1]]
           var year = dateComponents[2]
           return new Date('20' + [year, month, day].join('-'))
-        } // formatDate
+        }, // formatDate
+        readableFileSize: function (sizeInBytes) {
+          var i = sizeInBytes == 0 ? 0 : Math.floor(Math.log(sizeInBytes) / Math.log(1024))
+          return +((sizeInBytes / Math.pow(1024, i)).toFixed(2)) * 1 + ' ' + ['B', 'KB', 'MB', 'GB', 'TB'][i]
+        } // readableFileSize
+
       }, // helpers
     }
 
