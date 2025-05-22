@@ -570,10 +570,14 @@
                 })
 
                 // If a default option is configured, set it to checked.
-                if (settings.default && settings.default === checkbox.val()) {
-                  checkbox.attr('checked', '')
+                if (settings.default) {
+                  let defaults = Array.isArray(settings.default) ? settings.default : [settings.default];
+                  defaults.forEach((defaultValue) => {
+                    if (defaultValue === checkbox.val()) {
+                      checkbox.attr('checked', '')
+                    }
+                  })
                 }
-
                 // TODO: required for checkbox/radio
                 // if (settings.required) {
                 //   checkbox.attr('required', true)
