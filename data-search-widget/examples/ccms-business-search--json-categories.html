@@ -132,7 +132,8 @@
                                 data: {
                                     type: 'array',
                                     separator: ','
-                                }
+                                },
+                                default: ['Seniors', 'Carers']
                             },
                             parentCategory: {
                                 type: 'select',
@@ -148,8 +149,6 @@
                             }
                         },
                         dataCallback: (data) => {
-                            // console.log('category_options in dataCallback :>> ', category_options);
-                            // console.log('data in dataCallback :>> ', data);
                             // Add parent category to each datasource
                             data.forEach(set => {
                                 let parentCategory = category_options.find(option => {
