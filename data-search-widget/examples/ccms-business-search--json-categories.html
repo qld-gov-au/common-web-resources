@@ -89,7 +89,6 @@
             $.getJSON('/examples/ccms-business-categories.json')
 
                 .done(function (category_options) {
-                    // console.log('category_options :>> ', category_options);
 
                     var options = {
                         dataSources: [{
@@ -98,10 +97,19 @@
                         }],
                         maps: false,
                         keywordFields: [
-                            'outletName',  // @TODO: add this on Squiz
-                            'website',
+                            'outletName',
+                            'businessCategory',
                             'discount',
+                            'telephoneNumber',
+                            'website',
+                            'outletAddress',
+                            'outletSuburb',
+                            'outletPostcode',
                         ],
+                        sortFields: ['outletName'],
+                        pagination: {
+                            pageSize: 30
+                        },
                         locationSearch: {
                             enabled: true,
                             label: 'Suburb or postcode',
@@ -110,9 +118,10 @@
                                 postcode: 'outletPostcode'
                             },
                             distanceEnabled: true,
-                            distanceInput: {
+                            distanceRadius: {
                                 label: 'Distance Around (km)',
-                                default: 5,
+                                default: 0,
+                                options: ['', 5, 10, 20, 50, 100, 200]
                             }
                         },
                         filterFields: {
@@ -188,34 +197,7 @@
                                 });
                             },
                             markup: function (result) {
-                                var returnstring = `
-                                <div class="col">
-                                    <div class="qg-card qg-card__light-theme">
-                                        <div class="content">
-                                            <div class="details     card-body">
-                                            <h3 class="card-title">${result.outletName}</h3>
-                                            <div class="card-text">
-                                                <p><strong>Category:</strong> ${result.businessCategory}</p>
-                                                <p><strong>Discount:</strong> ${result.discount}</p>`;
-                                                    returnstring += returnWebsite(`${result.website}`);
-                                                    returnstring +=
-                                                        `<p><strong>Address:</strong> ${result.outletAddress} ${result.outletSuburb} ${result.outletPostcode}</p>`
-                                                    returnstring += getDirection(`${result.latitude}`, `${result.longitude}`);
-                                                    returnstring += `<p><strong>Phone:</strong> <a href="tel:${result.telephoneNumber}">${result.telephoneNumber}</a></p>`
-
-                                                    returnstring += `</div>
-                                            </div>`
-                                                    returnstring += `<div class="card-footer">`;
-                                                    returnstring += australiaWideTag(`${result.australiaWideFlag}`)
-                                                    returnstring += overseasTag(`${result.overseasFlag}`)
-                                                    returnstring += carerSchemeTag(`${result.carerSchemeFlag}`)
-                                                    returnstring += seniorSchemeTag(`${result.seniorSchemeFlag}`)
-                                                    returnstring += `</div>
-                                        </div> 
-                                    </div>
-                                </div>`;
-                                returnstring = `<p><strong>${result.outletName}</strong> - ${result.outletSuburb} - ${result.outletPostcode}</p>`;
-
+                                var returnstring = `<p><strong>${result.outletName}</strong> - ${result.outletSuburb} - ${result.outletPostcode}</p>`;
                                 return returnstring;
                             },
                         },
