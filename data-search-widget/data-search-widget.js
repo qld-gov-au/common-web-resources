@@ -770,13 +770,15 @@
             //   When distanceRadius is set,
             //      match item.latitude and item.longitude to the locationInput lat/lon
             var locationInput = $('#locationSearch-filter').val() || '';
-            var distanceRadius = parseFloat($('#distanceRadius-filter').val() || '');
-            var locationSuburb = '';
-            var locationPostcode = '';
-            var filteredByLocation = [];
-
             if (locationInput) {
-
+              
+              var distanceRadius = parseFloat($('#distanceRadius-filter').val() || '');
+              var locationSuburb = '';
+              var locationPostcode = '';
+              var filteredByLocation = [];
+              var filteredByRadius = [];
+              var filteredItemsExcLocation = filteredItems;
+  
               // If input value is a 4 digit number, set as postcode.
               if (locationInput.match(/^\d{4}$/)) {
                 locationPostcode = locationInput;
@@ -784,29 +786,30 @@
                 locationSuburb = locationInput;
               }
 
-              if (!distanceRadius) {
+              var suburbField = config.locationSearch?.matchFields?.suburb || 'suburb';
+              var postcodeField = config.locationSearch?.matchFields?.postcode || 'postcode';
 
-                var suburbField = config.locationSearch.matchFields.suburb || 'suburb';
-                var postcodeField = config.locationSearch.matchFields.postcode || 'postcode';
+              // String matching item's suburb or postcode with user input.
+              filteredByLocation = filteredItems.filter(function (item) {
+                if (!item[suburbField] && !item[postcodeField]) return false;
 
-                // String matching item's suburb or postcode with user input.
-                filteredByLocation = filteredItems.filter(function (item) {
-                  if (!item[suburbField] && !item[postcodeField]) return false;
+                // Postcode - check if input value matches with datasource's postcode field
+                if (locationPostcode) {
+                  return item[postcodeField] && item[postcodeField].toString() == locationPostcode;
 
-                  // Postcode - check if input value matches with datasource's postcode field
-                  if (locationPostcode) {
-                    return item[postcodeField] && item[postcodeField].toString().includes(locationPostcode);
+                // Suburb - check if input value matches with datasource's suburb field
+                } else {
+                  return item[suburbField] && item[suburbField].toLowerCase() == locationSuburb.toLowerCase();
+                }
+              });
 
-                  // Suburb - check if input value matches with datasource's suburb field
-                  } else {
-                    return item[suburbField] && item[suburbField].toLowerCase().includes(locationSuburb.toLowerCase());
-                  }
-                });
+              // Get the rest of filteredItems that do not match the location
+              filteredItemsExcLocation = filteredItems.filter(item => !filteredByLocation.includes(item));
 
               // If distanceRadius is set, filter by latitude and longitude.
-              } else if (distanceRadius > 0) {
+              if (distanceRadius > 0) {
 
-                filteredByLocation = await (async function () {
+                filteredByRadius = await (async function () {
                   try {
                     const response = await getLatLonCKAN(locationSuburb, locationPostcode);
 
@@ -815,7 +818,7 @@
                       const lat = parseFloat(response.lat);
                       const lon = parseFloat(response.lon);
 
-                      return filteredItems
+                      return filteredItemsExcLocation
                         .filter(function (item) {
                           if (!item.latitude || !item.longitude) return false;
                           const itemLat = parseFloat(item.latitude);
@@ -843,7 +846,8 @@
                 })(); // Ensure this is awaited
               }
 
-              filteredItems = filteredByLocation;
+              // Combine filtered items from location and distance radius
+              filteredItems = filteredByLocation.concat(filteredByRadius)
             }
 
             // Keyword search.
