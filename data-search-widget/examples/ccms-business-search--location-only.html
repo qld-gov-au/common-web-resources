@@ -81,8 +81,13 @@
                 maps: true,
                 keywordFields: [
                     'outletName',
-                    'website',
+                    'businessCategory',
                     'discount',
+                    'telephoneNumber',
+                    'website',
+                    'outletAddress',
+                    'outletSuburb',
+                    'outletPostcode',
                 ],
                 locationSearch: {
                     enabled: true,
@@ -92,9 +97,10 @@
                         postcode: 'outletPostcode'
                     },
                     distanceEnabled: true,
-                    distanceInput: {
+                    distanceRadius: {
                         label: 'Distance Around (km)',
-                        default: 5,
+                        default: 0,
+                        options: ['', 5, 10, 20, 50, 100, 200]
                     }
                 },
                 resultTemplate: {
@@ -128,50 +134,10 @@
                         });
                     },
                     markup: function (result) {
-                        var returnstring = `
-                        <div class="col">
-                            <div class="qg-card qg-card__light-theme">
-                                <div class="content">
-                                    <div class="details     card-body">
-                                    <h3 class="card-title">${result.outletName}</h3>
-                                    <div class="card-text">
-                                        <p><strong>Category:</strong> ${result.businessCategory}</p>
-                                        <p><strong>Discount:</strong> ${result.discount}</p>`;
-                                            returnstring += returnWebsite(`${result.website}`);
-                                            returnstring +=
-                                                `<p><strong>Address:</strong> ${result.outletAddress} ${result.outletSuburb} ${result.outletPostcode}</p>`
-                                            returnstring += getDirection(`${result.latitude}`, `${result.longitude}`);
-                                            returnstring += `<p><strong>Phone:</strong> <a href="tel:${result.telephoneNumber}">${result.telephoneNumber}</a></p>`
-
-                                            returnstring += `</div>
-                                    </div>`
-                                            returnstring += `<div class="card-footer">`;
-                                            returnstring += australiaWideTag(`${result.australiaWideFlag}`)
-                                            returnstring += overseasTag(`${result.overseasFlag}`)
-                                            returnstring += carerSchemeTag(`${result.carerSchemeFlag}`)
-                                            returnstring += seniorSchemeTag(`${result.seniorSchemeFlag}`)
-                                            returnstring += `</div>
-                                </div> 
-                            </div>
-                        </div>`;
-                        returnstring = `<p><strong>${result.outletName}</strong> - ${result.outletSuburb} - ${result.outletPostcode}</p>`;
-
+                        var returnstring = `<p><strong>${result.outletName}</strong> - ${result.outletSuburb} - ${result.outletPostcode}</p>`;
                         return returnstring;
                     },
                 },
-                /*placeholderTemplate: function() {
-                return `
-                <div class="col">
-                    <div class="card card-default card-no-action col-12">
-                        <div class="card-body">
-                        <h3 class="card-title">Search above</h3>
-                        <div class="card-text">
-                            <p>Use the search options above to find Working for Queensland survey results.</p>
-                        </div>
-                        </div>
-                    </div>
-                </div>`
-                }*/
             }
 
             // Create the search tool inside the target element.
