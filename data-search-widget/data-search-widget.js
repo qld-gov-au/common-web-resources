@@ -1311,14 +1311,16 @@
           return;
         }
         var latlong = item.latitude + ',' + item.longitude;
-          if (!markers[latlong]) {
-              // add marker to map
-              markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
-              markers[latlong].bindPopup(item.outletName);
-              markerClusters.addLayer(markers[latlong]);
-          }
+        if (!markers[latlong]) {
+          // add marker to map
+          markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
+          markers[latlong].bindPopup(item.outletName);
+          markerClusters.addLayer(markers[latlong]);
+        }
       }
     });
+    // Update map bounds
+    map.fitBounds(markerClusters.getBounds());
     //map.addLayer(markerClusters);
     markerClusters.addTo(map);
     globalClusters = markerClusters;
