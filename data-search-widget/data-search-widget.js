@@ -1243,6 +1243,7 @@
   let globalClusters;
   let globalSearchTool;
   let lastFilteredResults;
+  let includeMobileResults = true;
 
   function addLeafletCSS(src) {
     $('<link>', {
@@ -1294,12 +1295,20 @@
         })
         .addTo(map);
     addMarkers(mapsData);
+    $('button[type=submit]').on('click', function () {
+      includeMobileResults = true;
+      // This is to display all the results even if they are missing lat and long
+    })
     map.addEventListener('moveend', mapMoveCallback);
   }
 
   function mapMoveCallback(event) {
-    clearMarkers();
-    globalSearchTool.template.paginate(getInBoundResults());
+    if (!includeMobileResults) {
+      clearMarkers();
+      globalSearchTool.template.paginate(getInBoundResults());
+    } else {
+      includeMobileResults = false;
+    }
   }
 
   function getInBoundResults() {
