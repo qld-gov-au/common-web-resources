@@ -234,10 +234,10 @@
             else {
               // Render all results on initial load.
               searchTool.template.paginate(data)
+              globalSearchTool = searchTool
             }
 
             // Return data for other deferred functions to use.
-            globalData = data;
             return data
           }) // $.getScript(scripts.csv).then()
             .then(function (data) {
@@ -259,7 +259,7 @@
                     $('select[multiple]', searchTool.container).select2({ selectionCssClass: 'form-control' })
 
                     // Make reset button clear select2 inputs.
-                    $('button[type=reset]').click(function () {
+                    $('button[type=reset]').addEventListener('click', function () {
                       $('select[multiple]', searchTool.container).val(null).trigger('change')
                     })
 
@@ -697,7 +697,7 @@
             //when reset
             if (config.maps) {
               clearMarkers();
-              addMarkers(globalData);
+              addMarkers(data);
             }
           },
           filterItems: async function (items) {
@@ -937,7 +937,6 @@
             return filteredItems
           }, // andFilter
         }
-
         $('.search-form').submit(searchActions.submit)
         $('.search-form').on('reset', searchActions.reset)
       },
@@ -1240,9 +1239,10 @@
                         'https://unpkg.com/leaflet.tilelayer.fallback@1.0.4/dist/leaflet.tilelayer.fallback.js'
   ];
 
-  let globalData;
   let map;
   let globalClusters;
+  let globalSearchTool;
+  let lastFilteredResults;
 
   function addLeafletCSS(src) {
     $('<link>', {
@@ -1294,11 +1294,51 @@
         })
         .addTo(map);
     addMarkers(mapsData);
+    map.addEventListener('moveend', mapMoveCallback);
   }
 
+  function mapMoveCallback(event) {
+    clearMarkers();
+    globalSearchTool.template.paginate(getInBoundResults());
+  }
+
+  function getInBoundResults() {
+    let markers = {};
+    let gridSize = 30;
+    var results = []
+    let markerClusters = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      animateAddingMarkers: true,
+      maxClusterRadius: gridSize,
+    });
+    $.each(lastFilteredResults, function (key, item) {
+      if (item.latitude != "(blank)" && item.longitude != "(blank)") {
+        // put it on the map?
+        if (!item.latitude) {
+          return;
+        }
+        var thisLatlng = L.latLng(item.latitude, item.longitude);
+        if (map.getBounds().contains(thisLatlng)) {
+          var latlong = item.latitude + ',' + item.longitude;
+          if (!markers[latlong]) {
+            // add marker to map
+            markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
+            markers[latlong].bindPopup(item.outletName);
+            markerClusters.addLayer(markers[latlong]);
+            results.push(item);
+          }
+        }
+      }
+    });
+    //markerClusters.addTo(map);
+    map.addLayer(markerClusters);
+    globalClusters = markerClusters;
+    return results;
+  }
   function addMarkers(mapsData) {
     let markers = {};
     let gridSize = 30;
+
     let markerClusters = L.markerClusterGroup({
       showCoverageOnHover: false,
       animateAddingMarkers: true,
@@ -1320,12 +1360,31 @@
       }
     });
     // Update map bounds
-    map.fitBounds(markerClusters.getBounds());
-    //map.addLayer(markerClusters);
-    markerClusters.addTo(map);
+    if (lastFilteredResults != mapsData) {
+      lastFilteredResults = mapsData; // It has to come before fitBounds
+      if (markerClusters.getBounds()._northEast && markerClusters.getBounds()._southWest) {
+        map.fitBounds(markerClusters.getBounds());
+      }
+    }
+    //markerClusters.addTo(map);
+    map.addLayer(markerClusters);
     globalClusters = markerClusters;
   }
   function clearMarkers() {
+    // removing clusters
+    map.eachLayer(function (layer) {
+      if (layer._childCount) {
+          map.removeLayer(layer);
+          //console.log(layer._childClusters.length)
+          //console.log(layer._childCount);
+      }
+    });
+    // removing standalone markers
+    map.eachLayer(function (layer) {
+      if (layer._latlng){
+          map.removeLayer(layer);
+      }
+    });
     // clear map layers
     globalClusters.clearLayers();
   }
