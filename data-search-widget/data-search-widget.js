@@ -39,6 +39,7 @@
         }
       },
       initialize: function () {
+        globalConfig = config;
         // If no dataUrls have been given, log an error.
         if (config.dataSources.length === 0) {
           console.error('Search tool error: no data locations have been provided.')
@@ -1240,6 +1241,7 @@
   ];
 
   let map;
+  let globalConfig;
   let globalClusters;
   let globalSearchTool;
   let lastFilteredResults;
@@ -1332,7 +1334,7 @@
           if (!markers[latlong]) {
             // add marker to map
             markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
-            markers[latlong].bindPopup(item.outletName);
+            markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item));
             markerClusters.addLayer(markers[latlong]);
             results.push(item);
           }
@@ -1363,7 +1365,7 @@
         if (!markers[latlong]) {
           // add marker to map
           markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
-          markers[latlong].bindPopup(item.outletName);
+          markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item));
           markerClusters.addLayer(markers[latlong]);
         }
       }
