@@ -163,9 +163,9 @@ let category_options = [];
             return returnstring;
           },
           markerPopupText: function (result) {
-            var returnstring = `${result.outletName}` + "<b>" +
-                                returnWebsite(`${result.website}`) + "<b>" +
-                                returnAddress(`${result.outletAddress}`) + "<b>" +
+            var returnstring = `${result.outletName}` +
+                                returnWebsite(`${result.website}`) +
+                                returnAddress(`${result.outletAddress}`) +
                                 returnTelephoneNumber(`${result.telephoneNumber}`);
             return returnstring;
           }
