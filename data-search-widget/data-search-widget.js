@@ -698,7 +698,7 @@
             //when reset
             if (config.maps) {
               clearMarkers();
-              addMarkers(data);
+              addMarkers(data, false);
             }
           },
           filterItems: async function (items) {
@@ -1346,7 +1346,7 @@
     globalClusters = markerClusters;
     return results;
   }
-  function addMarkers(mapsData) {
+  function addMarkers(mapsData, updateMapBounds) {
     let markers = {};
     let gridSize = 30;
 
@@ -1371,7 +1371,7 @@
       }
     });
     // Update map bounds
-    if (lastFilteredResults != mapsData) {
+    if ((lastFilteredResults != mapsData) && updateMapBounds) {
       lastFilteredResults = mapsData; // It has to come before fitBounds
       if (markerClusters.getBounds()._northEast && markerClusters.getBounds()._southWest) {
         map.fitBounds(markerClusters.getBounds());
