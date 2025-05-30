@@ -875,7 +875,7 @@
             if (config.maps) {
               clearMarkers();
               // add layers
-              addMarkers(results);
+              addMarkers(results, true);
             }
 
             // Display filtered results
@@ -1296,7 +1296,7 @@
             position: "topright",
         })
         .addTo(map);
-    addMarkers(mapsData);
+    addMarkers(mapsData, true);
     $('button[type=submit]').on('click', function () {
       includeMobileResults = true;
       // This is to display all the results even if they are missing lat and long
