@@ -698,7 +698,7 @@
             //when reset
             if (config.maps) {
               clearMarkers();
-              addMarkers(data, true);
+              addMarkers(data);
             }
           },
           filterItems: async function (items) {
@@ -1246,6 +1246,7 @@
   let globalSearchTool;
   let lastFilteredResults;
   let includeMobileResults = true;
+  let resetCalled = false;
 
   function addLeafletCSS(src) {
     $('<link>', {
@@ -1302,6 +1303,7 @@
       // This is to display all the results even if they are missing lat and long
     })
     $('button[type=reset]').on('click', function () {
+      resetCalled = true;
       includeMobileResults = true;
       // This is to display all the results even if they are missing lat and long
     })
@@ -1309,11 +1311,12 @@
   }
 
   function mapMoveCallback(event) {
-    if (!includeMobileResults) {
+    if (!includeMobileResults && !resetCalled) {
       clearMarkers();
       globalSearchTool.template.paginate(getInBoundResults());
     } else {
       includeMobileResults = false;
+      resetCalled = false;
     }
   }
 
@@ -1350,7 +1353,7 @@
     globalClusters = markerClusters;
     return results;
   }
-  function addMarkers(mapsData, updateMapBounds) {
+  function addMarkers(mapsData) {
     let markers = {};
     let gridSize = 30;
 
@@ -1375,7 +1378,7 @@
       }
     });
     // Update map bounds
-    if ((lastFilteredResults != mapsData) || updateMapBounds) {
+    if ((lastFilteredResults != mapsData) || !resetCalled) {
       lastFilteredResults = mapsData; // It has to come before fitBounds
       if (markerClusters.getBounds()._northEast && markerClusters.getBounds()._southWest) {
         map.fitBounds(markerClusters.getBounds());
