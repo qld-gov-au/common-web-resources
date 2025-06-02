@@ -698,7 +698,7 @@
             //when reset
             if (config.maps) {
               clearMarkers();
-              addMarkers(data, false);
+              addMarkers(data, true);
             }
           },
           filterItems: async function (items) {
@@ -875,7 +875,7 @@
             if (config.maps) {
               clearMarkers();
               // add layers
-              addMarkers(results, true);
+              addMarkers(results);
             }
 
             // Display filtered results
@@ -1296,8 +1296,12 @@
             position: "topright",
         })
         .addTo(map);
-    addMarkers(mapsData, true);
+    addMarkers(mapsData);
     $('button[type=submit]').on('click', function () {
+      includeMobileResults = true;
+      // This is to display all the results even if they are missing lat and long
+    })
+    $('button[type=reset]').on('click', function () {
       includeMobileResults = true;
       // This is to display all the results even if they are missing lat and long
     })
@@ -1371,7 +1375,7 @@
       }
     });
     // Update map bounds
-    if ((lastFilteredResults != mapsData) && updateMapBounds) {
+    if ((lastFilteredResults != mapsData) || updateMapBounds) {
       lastFilteredResults = mapsData; // It has to come before fitBounds
       if (markerClusters.getBounds()._northEast && markerClusters.getBounds()._southWest) {
         map.fitBounds(markerClusters.getBounds());
