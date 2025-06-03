@@ -32,7 +32,86 @@ let options = {
   ],
 ```
 ### dataCallback
-
+```dataCallback``` is a function that is called when a specific event or condition is met, typically involving the handling or processing of data.
+```dataCallback`` can be written like the following:
+```js
+let options = {
+    ...
+    dataCallback: (data) => {
+        keywordFields: [
+        ... // add fields where users will look for specific keywords here
+        ],
+        filterFields: {
+        ... // add filter options here
+        }
+        
+    }
+```
+#### Options (in dataCallback)
+There are various options that determine how users can use the search tool.
+An example structure is defined as follows:
+```js
+let options = {
+      dataSources: [
+        {
+          url: 'API_URL',
+          results: 'result.results'
+        },
+      ],
+      dataCallback: (data) => {
+        // add custom functions here
+        keywords: false,
+        keywordFields: [
+            "title",
+            "description",
+            "name"
+        ],
+        filterFields: {
+            year: {
+                type: 'select',
+                sort: 'reverse',
+                multi: true,
+                label: "Year"
+                hint: "Your hint here"
+                defaultText: "",
+                data: {
+                type: 'array',
+                separator: ','
+                },
+                sort: 'numeric'
+                },
+                //from here
+                required: true,
+          dependents: {
+            event: {
+              type: 'select',
+              multi: false,
+              label: 'Event',
+              conditional: true,
+              minimum: 2,
+            },
+              dependents: {
+                task: {
+                  type: 'select',
+                  multi: false,
+                  label: 'Task',
+                  conditional: ['finance', 'payroll'],
+                  minimum: 1,
+                  dependents: {
+                    group: {
+                      type: 'select',
+                      multi: false,
+                      label: 'Group',
+                      conditional: 'pay',
+                      minimum: 2,
+                    },
+                  },
+                },
+              },
+            },
+        },
+    }
+```
 ### resultTemplate
 Function that stores two methods, **data** and **markup**.
 The method **data** is used to extract the determine the data we want to extract from the API.
@@ -133,12 +212,18 @@ let options = {
     }
 ```
 #### 3. sort
-The ```sort``` property is a boolean that defines whether sorting the search results is required or not.
+The ```sort``` property is defines the sorting of the search results. This property can be both a boolean and a string.
 ```js
 let options = {
     sort: true | false
     }
 ```
+```js
+let options = {
+    sort: 'reverse' | 'numeric'
+    }
+```
+
 #### 4. multi
 The ```multi``` property is a boolean that determines if the user can select multiple choices in the search.
 ```js
@@ -155,9 +240,42 @@ let options = {
 ```
 #### 6. hint
 Additional information displayed to the user for the object.
-The ```hint``` property 
 ```js
-hint: "Only holds data up to 10 years" 
+let options = {
+    hint: "Only holds data up to 10 years" 
+}
+```
+#### 7. conditional
+Can be either a boolean or an array.
+```js
+let options = {
+  conditional: true | false
+}
+```
+```js
+let options = {
+  conditional: ['finance', 'payroll']
+}
+```
+#### 8. separator
+Filter field that defines the delimiter that splits each property for the search term.
+```js
+let options = {
+    filterFields: {
+        year: {
+            separator: ','
+        }
+    }
+}
+```
+#### 9. minimum
+Minimum number of options for a filter to show
+```js
+let options = {
+    event: {
+        minimum: 1,
+    }
+}
 ```
 ### sortFields 
 This property shows an array of labels of the fields to sort search results by. Put a '-' before the label for reverse ordering.
@@ -222,43 +340,7 @@ let options = {
         return data
       },
 ```
-### Options (in dataCallback)
-There are various options that determine how users can use the search tool.
-An example structure is defined as follows:
-```js
-let options = {
-      dataSources: [
-        {
-          url: 'API_URL',
-          results: 'result.results'
-        },
-      ],
-      dataCallback: (data) => {
-        // add custom functions here
-        keywords: false,
-        keywordFields: [
-            "title",
-            "description",
-            "name"
-        ],
-        filterFields: {
-            year: {
-                type: 'select',
-                sort: 'reverse',
-                multi: true,
-                label: "Year"
-                hint: "Your hint here"
-                defaultText: "",
-                data: {
-                type: 'array',
-                separator: ','
-                },
-                sort: 'numeric'
-                },
-            },
-        },
-    }
-```
+
 
 ### Pagination
 Configuration options for pagination.js.
@@ -269,3 +351,4 @@ let options = {
       },
   }
 ```
+
