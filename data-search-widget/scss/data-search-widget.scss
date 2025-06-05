@@ -119,3 +119,9 @@
     text-decoration: none !important;
   }
 }
+
+.leaflet-popup-close-button, .leaflet-control-zoom.leaflet-control {
+  a {
+    text-decoration: none !important;
+  }
+}

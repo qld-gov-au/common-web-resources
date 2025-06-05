@@ -39,6 +39,7 @@
         }
       },
       initialize: function () {
+        globalConfig = config;
         // If no dataUrls have been given, log an error.
         if (config.dataSources.length === 0) {
           console.error('Search tool error: no data locations have been provided.')
@@ -234,10 +235,10 @@
             else {
               // Render all results on initial load.
               searchTool.template.paginate(data)
+              globalSearchTool = searchTool
             }
 
             // Return data for other deferred functions to use.
-            globalData = data;
             return data
           }) // $.getScript(scripts.csv).then()
             .then(function (data) {
@@ -259,7 +260,7 @@
                     $('select[multiple]', searchTool.container).select2({ selectionCssClass: 'form-control' })
 
                     // Make reset button clear select2 inputs.
-                    $('button[type=reset]').click(function () {
+                    $('button[type=reset]').addEventListener('click', function () {
                       $('select[multiple]', searchTool.container).val(null).trigger('change')
                     })
 
@@ -701,7 +702,7 @@
             //when reset
             if (config.maps) {
               clearMarkers();
-              addMarkers(globalData);
+              addMarkers(data);
             }
           },
           filterItems: async function (items) {
@@ -945,7 +946,6 @@
             return filteredItems
           }, // andFilter
         }
-
         $('.search-form').submit(searchActions.submit)
         $('.search-form').on('reset', searchActions.reset)
       },
@@ -1253,9 +1253,13 @@
                         'https://unpkg.com/leaflet.tilelayer.fallback@1.0.4/dist/leaflet.tilelayer.fallback.js'
   ];
 
-  let globalData;
   let map;
+  let globalConfig;
   let globalClusters;
+  let globalSearchTool;
+  let lastFilteredResults;
+  let includeMobileResults = true;
+  let resetCalled = false;
 
   function addLeafletCSS(src) {
     $('<link>', {
@@ -1307,11 +1311,65 @@
         })
         .addTo(map);
     addMarkers(mapsData);
+    $('button[type=submit]').on('click', function () {
+      includeMobileResults = true;
+      // This is to display all the results even if they are missing lat and long
+    })
+    $('button[type=reset]').on('click', function () {
+      resetCalled = true;
+      includeMobileResults = true;
+      // This is to display all the results even if they are missing lat and long
+    })
+    map.addEventListener('moveend', mapMoveCallback);
   }
 
+  function mapMoveCallback(event) {
+    if (!includeMobileResults && !resetCalled) {
+      clearMarkers();
+      globalSearchTool.template.paginate(getInBoundResults());
+    } else {
+      includeMobileResults = false;
+      resetCalled = false;
+    }
+  }
+
+  function getInBoundResults() {
+    let markers = {};
+    let gridSize = 30;
+    var results = []
+    let markerClusters = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      animateAddingMarkers: true,
+      maxClusterRadius: gridSize,
+    });
+    $.each(lastFilteredResults, function (key, item) {
+      if (item.latitude != "(blank)" && item.longitude != "(blank)") {
+        // put it on the map?
+        if (!item.latitude) {
+          return;
+        }
+        var thisLatlng = L.latLng(item.latitude, item.longitude);
+        if (map.getBounds().contains(thisLatlng)) {
+          var latlong = item.latitude + ',' + item.longitude;
+          if (!markers[latlong]) {
+            // add marker to map
+            markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
+            markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item));
+            markerClusters.addLayer(markers[latlong]);
+            results.push(item);
+          }
+        }
+      }
+    });
+    //markerClusters.addTo(map);
+    map.addLayer(markerClusters);
+    globalClusters = markerClusters;
+    return results;
+  }
   function addMarkers(mapsData) {
     let markers = {};
     let gridSize = 30;
+
     let markerClusters = L.markerClusterGroup({
       showCoverageOnHover: false,
       animateAddingMarkers: true,
@@ -1324,19 +1382,40 @@
           return;
         }
         var latlong = item.latitude + ',' + item.longitude;
-          if (!markers[latlong]) {
-              // add marker to map
-              markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
-              markers[latlong].bindPopup(item.outletName);
-              markerClusters.addLayer(markers[latlong]);
-          }
+        if (!markers[latlong]) {
+          // add marker to map
+          markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
+          markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item));
+          markerClusters.addLayer(markers[latlong]);
+        }
       }
     });
-    //map.addLayer(markerClusters);
-    markerClusters.addTo(map);
+    // Update map bounds
+    if ((lastFilteredResults != mapsData) || !resetCalled) {
+      lastFilteredResults = mapsData; // It has to come before fitBounds
+      if (markerClusters.getBounds()._northEast && markerClusters.getBounds()._southWest) {
+        map.fitBounds(markerClusters.getBounds());
+      }
+    }
+    //markerClusters.addTo(map);
+    map.addLayer(markerClusters);
     globalClusters = markerClusters;
   }
   function clearMarkers() {
+    // removing clusters
+    map.eachLayer(function (layer) {
+      if (layer._childCount) {
+          map.removeLayer(layer);
+          //console.log(layer._childClusters.length)
+          //console.log(layer._childCount);
+      }
+    });
+    // removing standalone markers
+    map.eachLayer(function (layer) {
+      if (layer._latlng){
+          map.removeLayer(layer);
+      }
+    });
     // clear map layers
     globalClusters.clearLayers();
   }

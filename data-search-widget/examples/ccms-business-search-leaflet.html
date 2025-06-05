@@ -42,6 +42,9 @@ function getDirection(latitude, longitude) {
     retVal = '<p><a href="https://www.google.com/maps/dir/?api=1&destination=' + latitude + ',' + longitude + '" target="_blank">Get directions</a></p>';
     return retVal;
 }
+function returnTelephoneNumber(telephone) {
+  return '<p><strong>Phone:</strong> <a href="tel:' + telephone + '">' + telephone + "</a></p>";
+}
 function returnAddress(address, suburb, postcode)  {
     returnVal = '';
     if (address == '(blank)') address = '';
@@ -54,7 +57,7 @@ function returnAddress(address, suburb, postcode)  {
 function returnWebsite(website) {
     returnVal = ''
     if (website != '(blank)') {
-        returnVal += `<p><strong>Website:</strong> <a href=`;
+        returnVal += `<p><strong>Website:</strong> <a style="word-wrap: break-word;" href=`;
         if (website.indexOf("http") < 0) {
             returnVal += `"http://`
         }
@@ -144,7 +147,7 @@ let category_options = [];
             returnstring += returnWebsite(`${result.website}`);
             returnstring += returnAddress(`${result.outletAddress}`, `${result.outletSuburb}`, `${result.outletPostcode}`);
             returnstring += getDirection(`${result.latitude}`, `${result.longitude}`);
-            returnstring += `<p><strong>Phone:</strong> <a href="tel:${result.telephoneNumber}">${result.telephoneNumber}</a></p>`
+            returnstring += returnTelephoneNumber(`${result.telephoneNumber}`);
                     
             returnstring += `</div>
                 </div>`
@@ -159,6 +162,13 @@ let category_options = [];
             </div>` 
             return returnstring;
           },
+          markerPopupText: function (result) {
+            var returnstring = `${result.outletName}` +
+                                returnWebsite(`${result.website}`) +
+                                returnAddress(`${result.outletAddress}`) +
+                                returnTelephoneNumber(`${result.telephoneNumber}`);
+            return returnstring;
+          }
         },
       }
       // Create the search tool inside the target element.
