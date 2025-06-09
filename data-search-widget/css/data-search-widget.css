@@ -94,7 +94,7 @@
   text-decoration: none !important;
 }
 
-.leaflet-popup-close-button a, .leaflet-control-zoom.leaflet-control a {
+a.leaflet-popup-close-button, .leaflet-control-zoom.leaflet-control a {
   text-decoration: none !important;
 }
 
