@@ -893,7 +893,7 @@
               searchTool.template.paginate(results)
             } else {
               $('.results').append(
-                '<div id="no-results">' +
+                '<div id="no-results" class="col">' +
                 '<h3>No results found</h3>' +
                 '<p>' + errorMessage + '</p>' +
                 '</div>')
