@@ -1416,6 +1416,11 @@
           map.removeLayer(layer);
       }
     });
+    map.eachLayer(function (layer) {
+      if (layer._layers) {
+        map.removeLayer(layer);
+      }
+    });
     // clear map layers
     globalClusters.clearLayers();
   }
