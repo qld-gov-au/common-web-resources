@@ -568,14 +568,24 @@
                   name: checkName,
                   value: option.value || option,
                   class: 'form-check-input',
+                  role: 'checkbox',
+                  'aria-checked': 'false'
                 })
 
+                checkbox.on('click',function(){
+                    if (this.getAttribute('aria-checked') == 'true'){
+                      this.setAttribute('aria-checked','false')
+                    }
+                    else {
+                      this.setAttribute('aria-checked','true')
+                    }
+                })
                 // If a default option is configured, set it to checked.
                 if (settings.default) {
                   let defaults = Array.isArray(settings.default) ? settings.default : [settings.default];
                   defaults.forEach((defaultValue) => {
                     if (defaultValue === checkbox.val()) {
-                      checkbox.attr('checked', '')
+                      checkbox.attr('checked', '').attr('aria-checked', 'true')
                     }
                   })
                 }
@@ -605,7 +615,23 @@
               id: name + '-filter',
               name: name,
               class: 'form-control',
+              'aria-expanded': 'false'
             })
+
+            select.on('click change', function(event){
+              if (this.getAttribute('aria-expanded') == 'true'){
+                this.setAttribute('aria-expanded', 'false')
+              }
+              else {
+                this.setAttribute('aria-expanded', 'true')
+                event.preventDefault(); // This is needed to stop the second click on an option when the dropdown is open
+              }
+            })
+
+            select.on('blur', function(){
+              this.setAttribute('aria-expanded', 'false')
+            })
+
             if (settings.required) {
               select.attr('required', true)
             }
@@ -653,7 +679,7 @@
           return $('<div>').addClass('results row row-cols-1 g-4')
         },
         pager: function () {
-          return $('<nav>').addClass('pager')
+          return $('<nav>').addClass('pager').attr('role', 'navigation').attr('aria-label', 'Pagination Navigation');
         },
         pageSummary: function () {
           return $('<div>').addClass('page-summary').insertBefore('.results')
@@ -966,7 +992,7 @@
               searchTool.template.printResults(data)
 
               $('.pagination li').addClass('page-item')
-              $('.pagination li a').addClass('page-link')
+              $('.pagination li a').addClass('page-link').attr('href', '')
               $('.pager, .page-summary').show()
               if (config.pagination.hidePagination ||
                   pagination.totalNumber <= pagination.pageSize) {

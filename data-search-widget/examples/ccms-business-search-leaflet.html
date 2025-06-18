@@ -100,6 +100,15 @@ let category_options = [];
             }
         },
         filterFields: {
+          cardType: {
+            type: 'check',
+            label: 'Card type',
+            multi: true,
+            data: {
+              type: 'array',
+              separator: ','
+            }
+          },
           parentCategory: {
             type: 'select',
             label: 'Category',
@@ -119,6 +128,14 @@ let category_options = [];
               return option.children && option.children.some(child => child.value === set['Business Category']);
             });
             set.parentCategory = parentCategory ? parentCategory.value : '';
+
+            // Add cardType as a new data property based on the record's
+            // scheme flags
+            set.cardType = [];
+            if (set['Senior Scheme Flag'] === 'Yes') { set.cardType.push('Seniors'); }
+            if (set['Carer Scheme Flag'] === 'Yes') { set.cardType.push('Carers'); }
+
+            set.cardType = set.cardType.join(',');
           })
           return data
         },
