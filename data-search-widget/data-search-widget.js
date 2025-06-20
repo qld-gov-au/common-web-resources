@@ -993,6 +993,15 @@
 
               $('.pagination li').addClass('page-item')
               $('.pagination li a').addClass('page-link').attr('href', '')
+
+              $.each($('.pagination li a'), function () {
+                var pageNumber = this.text;
+                $(this).attr('aria-label', 'Page ' + pageNumber)
+              })
+              $('.pagination .paginationjs-ellipsis a').attr('aria-label', 'More pages')
+              $('.pagination .previous a').attr('aria-label', 'Previous page')
+              $('.pagination .next a').attr('aria-label', 'Next page')
+
               $('.pager, .page-summary').show()
               if (config.pagination.hidePagination ||
                   pagination.totalNumber <= pagination.pageSize) {
