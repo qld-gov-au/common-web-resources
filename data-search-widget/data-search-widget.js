@@ -663,7 +663,6 @@
         var searchActions = {
           submit: function (event) {
             event.preventDefault()
-            $(this).closest('form').addClass('was-validated')
             if ($(':required', $(this)).length) {
               var valid = true
               $(':required', $(this)).each(function () {
@@ -899,8 +898,6 @@
                 '</div>')
               $('.page-summary, .pager').hide()
             }
-
-            $('#search-form .was-validated').removeClass('was-validated')
           }, // filterItems()
           orFilter: function (values, items) {
             var filteredItems = []
