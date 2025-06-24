@@ -573,7 +573,7 @@
                 })
 
                 checkbox.on('click',function(){
-                    if (this.getAttribute('aria-checked') == 'true'){
+                    if (!this.checked) {
                       this.setAttribute('aria-checked','false')
                     }
                     else {
@@ -585,7 +585,7 @@
                   let defaults = Array.isArray(settings.default) ? settings.default : [settings.default];
                   defaults.forEach((defaultValue) => {
                     if (defaultValue === checkbox.val()) {
-                      checkbox.attr('checked', '').attr('aria-checked', 'true')
+                      checkbox.prop('checked', true).attr('aria-checked', 'true')
                     }
                   })
                 }
