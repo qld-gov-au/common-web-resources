@@ -1426,7 +1426,7 @@
     if ((lastFilteredResults != mapsData) || !resetCalled) {
       lastFilteredResults = mapsData; // It has to come before fitBounds
       if (markerClusters.getBounds()._northEast && markerClusters.getBounds()._southWest) {
-        map.fitBounds(markerClusters.getBounds(), { padding: [50, 50] });
+        map.fitBounds(markerClusters.getBounds(), { padding: [10, 10] });
       }
     }
     //markerClusters.addTo(map);
