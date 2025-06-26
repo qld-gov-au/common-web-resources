@@ -1301,6 +1301,8 @@
     }).appendTo('head');
   }
 
+
+  // Initialise Leaflet Map
   function initMap(mapsData) {
     let mapEle = document.getElementById('search-widget-maps');
     let controlsPosition = mapEle.getAttribute('data-controlsPosition');
@@ -1318,11 +1320,13 @@
     map = L.map('search-widget-maps', { center: center, zoom: zoom, layers: frontLayer, zoomControl: false });
     map.createPane('background');
     map.getPane('background').style.zIndex = -100;
+
     L.tileLayer.fallback('https://services.ga.gov.au/gis/rest/services/NationalBaseMap_GreyScale/MapServer/WMTS/tile/1.0.0/NationalBaseMap_GreyScale/default/GoogleMapsCompatible/{z}/{y}/{x}.png', {
         attribution: '©Commonwealth of Australia (Geoscience Australia)',
         maxZoom: 16,
         pane: 'background',
     }).addTo(map);
+
     map.attributionControl.setPrefix('Leaflet');
 
     // Leaflet has no equivalent to the centre right and centre left positions so this just sets them to whichever available spot is empty
@@ -1342,7 +1346,9 @@
             position: "topright",
         })
         .addTo(map);
+
     addMarkers(mapsData);
+
     $('button[type=submit]').on('click', function () {
       includeMobileResults = true;
       // This is to display all the results even if they are missing lat and long
@@ -1352,9 +1358,20 @@
       includeMobileResults = true;
       // This is to display all the results even if they are missing lat and long
     })
-    map.addEventListener('moveend', mapMoveCallback);
-  }
 
+    // Trigger moveend listener only when map is manually moved by end-user,
+    //  not by Leaflet auto-pan when opening a popup.
+    map.addEventListener('moveend', function (e) {
+      if (!map._popup || !map._popup._isOpen) {
+        mapMoveCallback(e);
+      }
+    });
+
+  }
+  // End of: initMap
+
+
+  // Map moveend callback function
   function mapMoveCallback(event) {
     if (!includeMobileResults && !resetCalled) {
       clearMarkers();
@@ -1365,6 +1382,8 @@
     }
   }
 
+
+  // Filter results based on map bounds (called when map is moved)
   function getInBoundResults() {
     let markers = {};
     let gridSize = 30;
@@ -1398,6 +1417,9 @@
     globalClusters = markerClusters;
     return results;
   }
+
+
+  // Add markers to the map
   function addMarkers(mapsData) {
     let markers = {};
     let gridSize = 30;
@@ -1433,6 +1455,9 @@
     map.addLayer(markerClusters);
     globalClusters = markerClusters;
   }
+
+
+  // Clear clusters markers, independent markers, and layer groups
   function clearMarkers() {
     // removing clusters
     map.eachLayer(function (layer) {
@@ -1456,4 +1481,5 @@
     // clear map layers
     globalClusters.clearLayers();
   }
+
 })(jQuery)
