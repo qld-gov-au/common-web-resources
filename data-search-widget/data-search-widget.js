@@ -1359,19 +1359,15 @@
       // This is to display all the results even if they are missing lat and long
     })
 
-    // Trigger moveend listener only when map is manually moved by end-user,
-    //  not by Leaflet auto-pan when opening a popup.
-    map.addEventListener('moveend', function (e) {
-      if (!map._popup || !map._popup._isOpen) {
-        mapMoveCallback(e);
-      }
-    });
+    // Update markers when map is dragged or zoomed
+    map.on('dragend', mapMoveCallback);
+    map.on('zoomend', mapMoveCallback);
 
   }
   // End of: initMap
 
 
-  // Map moveend callback function
+  // Callback function to update the markers when map is moved.
   function mapMoveCallback(event) {
     if (!includeMobileResults && !resetCalled) {
       clearMarkers();
