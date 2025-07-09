@@ -137,6 +137,14 @@ let category_options = [];
             if (set['Carer Scheme Flag'] === 'Yes') { set.cardType.push('Carers'); }
 
             set.cardType = set.cardType.join(',');
+
+            if (set['Mobile Business Flag'] == 'Yes') {
+              set.Latitude = '(blank)';
+              set.Longitude = '(blank)';
+              set['Outlet Address'] = '(blank)';
+              set['Outlet Suburb'] = '(blank)';
+              set['Outlet Postcode'] = '(blank)';
+            }
           })
           return data
         },
