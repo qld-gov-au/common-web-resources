@@ -917,7 +917,7 @@
             if (results.length) {
               searchTool.template.paginate(results)
             } else {
-              map.fitBounds(qldMApBounds);
+              map.fitBounds(qldMapBounds);
               $('.results').append(
                 '<div id="no-results" class="col">' +
                 '<h3>No results found</h3>' +
@@ -1293,7 +1293,7 @@
   let lastFilteredResults;
   let includeMobileResults = true;
   let resetCalled = false;
-  let qldMApBounds;
+  let qldMapBounds;
 
   function addLeafletCSS(src) {
     $('<link>', {
@@ -1365,7 +1365,7 @@
     map.on('dragend', mapMoveCallback);
     map.on('zoomend', mapMoveCallback);
 
-    qldMApBounds = map.getBounds();
+    qldMapBounds = map.getBounds();
 
   }
   // End of: initMap
@@ -1447,10 +1447,10 @@
     // Update map bounds
     if ((lastFilteredResults != mapsData) || !resetCalled) {
       lastFilteredResults = mapsData; // It has to come before fitBounds
-      if (markerClusters.getBounds()._northEast && markerClusters.getBounds()._southWest) {
+      if (markerClusters.getBounds().getNorthEast() && markerClusters.getBounds().getSouthWest()) {
         map.fitBounds(markerClusters.getBounds(), { padding: [10, 10] });
       } else {
-        map.fitBounds(qldMApBounds);
+        map.fitBounds(qldMapBounds);
       }
     }
     //markerClusters.addTo(map);
