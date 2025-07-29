@@ -1399,16 +1399,20 @@
         if (!item.latitude) {
           return;
         }
-        var thisLatlng = L.latLng(item.latitude, item.longitude);
-        if (map.getBounds().contains(thisLatlng)) {
-          var latlong = item.latitude + ',' + item.longitude;
-          if (!markers[latlong]) {
-            // add marker to map
-            markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
-            markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item));
-            markerClusters.addLayer(markers[latlong]);
-            results.push(item);
+        try {
+          var thisLatlng = L.latLng(item.latitude, item.longitude);
+          if (map.getBounds().contains(thisLatlng)) {
+            var latlong = item.latitude + ',' + item.longitude;
+              if (!markers[latlong]) {
+                // add marker to map
+                markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
+                markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item));
+                markerClusters.addLayer(markers[latlong]);
+                results.push(item);
+              }
           }
+        } catch (error) {
+          console.log(error)
         }
       }
     });
@@ -1435,12 +1439,16 @@
         if (!item.latitude) {
           return;
         }
-        var latlong = item.latitude + ',' + item.longitude;
-        if (!markers[latlong]) {
-          // add marker to map
-          markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
-          markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item));
-          markerClusters.addLayer(markers[latlong]);
+        try {
+          var latlong = item.latitude + ',' + item.longitude;
+          if (!markers[latlong]) {
+            // add marker to map
+            markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
+            markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item));
+            markerClusters.addLayer(markers[latlong]);
+          }
+        } catch (error) {
+          console.log(error)
         }
       }
     });
