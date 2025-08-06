@@ -98,4 +98,8 @@ a.leaflet-popup-close-button, .leaflet-control-zoom.leaflet-control a {
   text-decoration: none !important;
 }
 
+#search-widget-maps .leaflet-top, #search-widget-maps .leaflet-bottom {
+  z-index: 500;
+}
+
 /*# sourceMappingURL=data-search-widget.css.map */

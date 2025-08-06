@@ -1338,14 +1338,14 @@
     else if (controlsPosition === "LEFT_BOTTOM") controlsPosition = "bottomleft";
     else if (controlsPosition === "LEFT_CENTER") controlsPosition = "bottomleft";
     else if (controlsPosition === "LEFT_TOP") controlsPosition = "topleft";
-    else if (!["bottomright", "topright", "bottomleft", "topleft"].includes(controlsPosition)) controlsPosition = "bottomleft";
+    else if (!["bottomright", "topright", "bottomleft", "topleft"].includes(controlsPosition)) controlsPosition = "bottomright";
 
     L.control.zoom({ position: controlsPosition }).addTo(map);
     L.control
         .scale({
             imperial: false,
             metric: true,
-            position: "topleft",
+            position: "topright",
         })
         .addTo(map);
 
