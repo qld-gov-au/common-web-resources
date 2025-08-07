@@ -918,12 +918,17 @@
               searchTool.template.paginate(results)
             } else {
               map.fitBounds(qldMapBounds);
-              $('.results').append(
-                '<div id="no-results" class="col">' +
-                '<h3>No results found</h3>' +
-                '<p>' + errorMessage + '</p>' +
-                '</div>')
-              $('.page-summary, .pager').hide()
+              $('.page-summary, .pager').hide();
+
+              if (config.noResultsTemplate) {
+                $('.results').empty().append(config.noResultsTemplate());
+              } else {
+                $('.results').append(
+                  '<div id="no-results" class="col">' +
+                  '<h3>No results found</h3>' +
+                  '<p>' + errorMessage + '</p>' +
+                  '</div>');
+              }
             }
           }, // filterItems()
           orFilter: function (values, items) {

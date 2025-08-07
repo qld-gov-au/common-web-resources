@@ -78,6 +78,7 @@ let category_options = [];
       var options = {
         dataSources: [{
           url: 'https://www.data.qld.gov.au/api/3/action/datastore_search?resource_id=33159533-c2ee-4e11-902d-e2d250e2c84c&limit=9000',
+          //url: 'https://staging.data.qld.gov.au/api/3/action/datastore_search?resource_id=78d3611b-e9cf-48d0-b0aa-8588eb5163a8&limit=9000',
           results: 'result.records',
         }, ],
         maps: true,
@@ -213,6 +214,14 @@ let category_options = [];
                                 returnTelephoneNumber(`${result.telephoneNumber}`);
             return returnstring;
           }
+        },
+        noResultsTemplate: function () {
+          return `
+          <div id="no-results">
+            <h3>We couldn\'t find any matching results.</h3>
+            <p>Try again by removing either keywords or subcategories, or by increasing the distance around (km).</p>
+          </div>
+          `
         },
       }
       // Create the search tool inside the target element.
