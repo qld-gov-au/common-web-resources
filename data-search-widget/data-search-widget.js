@@ -921,7 +921,7 @@
               $('.page-summary, .pager').hide();
 
               if (config.noResultsTemplate) {
-                $('.results').empty().append(config.noResultsTemplate());
+                $('.results').append(config.noResultsTemplate());
               } else {
                 $('.results').append(
                   '<div id="no-results" class="col">' +
