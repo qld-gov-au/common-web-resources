@@ -61,7 +61,7 @@ function returnAddress(address, suburb, postcode)  {
 function returnWebsite(website) {
     returnVal = ''
     if (website != '(blank)') {
-        returnVal += `<p><strong>Website:</strong> <a style="word-wrap: break-word;" href=`;
+        returnVal += `<p><strong>Website:</strong> <a style="word-wrap: break-word;" href="`;
         if (website.indexOf("http") < 0) {
             returnVal += `"http://`
         }
