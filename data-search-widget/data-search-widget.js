@@ -890,6 +890,7 @@
               }
               results = filteredItems.filter(function (item) {
                 var searchFields = $.map(config.keywordFields, function (field) {
+                  field = field.trim();
                   return item[field]
                 }).join(' ')
 
