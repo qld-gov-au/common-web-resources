@@ -917,7 +917,7 @@
             if (results.length) {
               searchTool.template.paginate(results)
             } else {
-              if (config.maps && map) {
+              if (map) {
                 map.fitBounds(qldMapBounds);
               }
               $('.page-summary, .pager').hide();
