@@ -890,7 +890,7 @@
               }
               results = filteredItems.filter(function (item) {
                 var searchFields = $.map(config.keywordFields, function (field) {
-                  field = field.trim();
+                  field = searchTool.helpers.sanitise(field);
                   return item[field]
                 }).join(' ')
 
@@ -1061,6 +1061,15 @@
             .replace(/(?:^\w|[A-Z]|\b\w)/g, function (ltr, idx) { return idx === 0 ? ltr.toLowerCase() : ltr.toUpperCase() })
             .replace(/[\W_]+/g, '')
         }, // toCamelCase
+        // Removing greater than, less than, single and double quote characters and
+        // also leading and trailing space from the string
+        sanitise: function (str) {
+          return str.replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;').trim();
+        },
         toTitleCase: function (str) { return str.replace(/(?:^|\s)\w/g, function (match) { return match.toUpperCase() }) },
         dynamicSort: function (properties) {
           if (!properties) {
