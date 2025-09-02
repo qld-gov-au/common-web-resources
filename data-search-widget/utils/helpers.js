@@ -100,3 +100,23 @@ async function getLatLon(locationSearch) {
         return null;
     }
 }
+
+async function checkUrlStatus(url) {
+    if (url == '') {
+        console.error('No datasource url is provided');
+        return false;
+    }
+    try {
+    const response = await fetch(url);
+    if (response.status === 200) {
+        console.log(`${url} returned a 200 OK status.`);
+        return true;
+    } else {
+        console.error(`${url} returned status: ${response.status}`);
+        return false;
+    }
+    } catch (error) {
+    console.error(`Error checking ${url}:`, error);
+    return false;
+    }
+}
