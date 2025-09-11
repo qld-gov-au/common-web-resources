@@ -357,7 +357,7 @@
 
           var actions = $('<fieldset>').addClass('actions')
           var submit = $('<button type="submit">').addClass('btn btn-primary').text(config.submitLabel)
-          var reset = $('<button type="reset">').addClass('btn btn-link').text(config.resetLabel)
+          var reset = $('<button type="reset">').addClass('btn btn-secondary').text(config.resetLabel)
 
           actions.append(submit, reset)
           form.append(actions)
