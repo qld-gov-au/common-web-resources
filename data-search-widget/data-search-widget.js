@@ -525,11 +525,18 @@
               else if (settings.siblingFilter && changed && changed.val()) {
                 // Filter out items that don't match the value of the changed input, then map the relevant field options.
                 options = data.filter(function (item) { return item[changed.attr('name')] === changed.val() })
-                  .map(function (item) { return item[name].trim() })
+                  .map(function (item) {
+                    if (item[name])
+                      return item[name].trim()
+                    else return '';
+                  })
                   .filter(function (item, index, array) { return !!item && array.indexOf(item) === index })
               }
               else {
-                options = data.map(function (item) { return item[name].trim() })
+                options = data.map(function (item) {
+                  if (item[name])
+                    return item[name].trim()
+                  else return '' })
                   .filter(function (item, index, array) { return !!item && array.indexOf(item) === index })
               }
             }
