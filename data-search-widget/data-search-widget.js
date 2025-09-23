@@ -46,235 +46,16 @@
           return
         }
 
-        // Get all data and merge into a single array.
-        var returnedData = []
         for (var url in config.dataSources) {
-          returnedData.push($.get(config.dataSources[url].url))
+          checkUrlStatus(config.dataSources[url].url)
+          .then(isDatasourceValid => {
+            if (isDatasourceValid) {
+              renderSearchWidget(searchTool, config, url, container);
+            } else {
+              console.error('Datasource url given is not valid.')
+            }
+          });
         }
-
-        // When array of data is ready, merge data and call processes.
-        $.when.apply(this, returnedData).done(function () {
-          // If no data is returned, log an error.
-          if (returnedData.length === 0) {
-            console.error('Search tool error: no data was retrieved.')
-            return
-          }
-
-          var resultData = []
-          if (returnedData.length > 1) {
-            for (var arg in arguments) {
-              var values = arguments[arg][0]
-              resultData.push(values)
-            }
-          }
-          else {
-            resultData.push(arguments[0])
-          }
-
-          $.getScript(searchTool.scripts.csv.script).then(function () {
-            searchTool.scripts.csv.loaded = true
-            var data = []
-            for (var resultSet in resultData) {
-              var dataObject = []
-              // If data is given as a string (e.g. from CSV).
-              if (typeof resultData[resultSet] === 'string') {
-                // Remove empty rows of data.
-                var cleanString = $.csv.parsers.splitLines(resultData[resultSet])
-                  .filter(function (line) { return RegExp(/\w/).test(line) })
-                  .join('\n')
-                // Convert string data to objects.
-                dataObject = $.csv.toObjects(cleanString)
-              }
-              // If data is an object and results location is given.
-              else if (config.dataSources[resultSet]['results'] && config.dataSources[resultSet]['results'].length) {
-                dataObject = searchTool.helpers.fromString(resultData[resultSet], config.dataSources[resultSet]['results'])
-              }
-              // Otherwise use object data as is.
-              else {
-                dataObject = resultData[resultSet]
-              }
-              // Merge data.
-              $.merge(data, dataObject)
-            }
-
-            // Run additional function from configuration to prepare or select data.
-            data = config.dataCallback(data)
-
-            // Standardise data keys to camel case.
-            data = searchTool.helpers.standardiseKeys(data)
-
-            if (config.maps) {
-              var mapDiv = $('<div id="search-widget-maps"></div>');
-              var searchToolDiv = $('#search-tool');
-              mapDiv.insertBefore(searchToolDiv);
-              $('#search-widget-maps').css("height", "400px");
-
-              for (i = 0; i < leafletCss.length; i ++) {
-                addLeafletCSS(leafletCss[i]);
-              }
-
-              if (!searchTool.scripts.leafletJs.loaded) {
-                $.getScript(searchTool.scripts.leafletJs.script).done(function () {
-                  searchTool.scripts.leafletJs.loaded = true
-                  if (!searchTool.scripts.leafletMarkerClusterJs.loaded) {
-                    $.getScript(searchTool.scripts.leafletMarkerClusterJs.script).done(function () {
-                      searchTool.scripts.leafletMarkerClusterJs.loaded = true
-                      if (!searchTool.scripts.esriLeafletJs.loaded) {
-                        $.getScript(searchTool.scripts.esriLeafletJs.script).done(function () {
-                          searchTool.scripts.esriLeafletJs.loaded = true
-                          if (!searchTool.scripts.esriLeafletVectorJs.loaded) {
-                            $.getScript(searchTool.scripts.esriLeafletVectorJs.script).done(function () {
-                              searchTool.scripts.esriLeafletVectorJs.loaded = true
-                              if (!searchTool.scripts.leafletTileLayerFallbackJs.loaded) {
-                                $.getScript(searchTool.scripts.leafletTileLayerFallbackJs.script).done(function () {
-                                  searchTool.scripts.leafletTileLayerFallbackJs.loaded = true
-                                  initMap(data);
-                                })
-                              }
-                            })
-                          }
-                        })
-                      }
-                    })
-                  }
-                })
-              }
-            }
-
-            // Add flattened version of filter fields to searchTool.
-            searchTool.flatFilterFields = []
-            searchTool.helpers.flattenFields(config.filterFields, searchTool.flatFilterFields)
-            // Convert string data to arrays if applicable.
-            data = searchTool.helpers.dataStringToArray(data, config.filterFields)
-
-            // Create a unique id for the search widget that gives context.
-            var uniqueId = searchTool.helpers.uniqueId('search-form')
-
-            // Build base search widget.
-            if (!config.hideSearchWidget) {
-              container.append(searchTool.build.widget(uniqueId))
-
-              // Create filter fields.
-              $.each(config.filterFields, function (name, settings) { searchTool.build.filters(data, name, settings) })
-            }
-
-            // Sort data by specified field/s.
-            if (config.sortFields) {
-              data.sort(searchTool.helpers.dynamicSort(config.sortFields))
-            }
-
-            // Add actions to search form buttons.
-            searchTool.actions(data, uniqueId)
-
-            // Add results container.
-            container.append(searchTool.build.results())
-
-            // Add pager and page summary.
-            searchTool.build.pager().insertAfter('.results')
-            searchTool.build.pageSummary().insertBefore('.results')
-
-            if (config.prefilter) {
-              // TODO: can this leverage existing filter logic?
-              if (config.hideSearchWidget) {
-                let filteredItems = []
-                $.each(config.prefilter, (key, values) => {
-                  $.each(data, (i, item) => {
-                    let match = true
-
-                    if (!Array.isArray(values)) {
-                      values = [values]
-                    }
-                    $.each(values, (i, value) => {
-                      if (Array.isArray(item[key])) {
-                        if (!item[key].includes(value)) {
-                          match = false
-                        }
-                      }
-                      // else if (value !== item[key]) {
-                      else if (!new RegExp(value,'i').test(item[key])) {
-                        match = false
-                      }
-                    })
-
-                    if (match) {
-                      filteredItems.push(item)
-                    }
-                  })
-                })
-
-                searchTool.template.printResults(filteredItems.slice(0,config.pagination.pageSize))
-              }
-              else {
-                $.each(config.prefilter, (key, values) => {
-                  // TODO: test if this works for multi-select/multi-values
-                  console.log('values', values)
-                  if (Array.isArray(values)) {
-                    if (searchTool.flatFilterFields[key].multi) {
-                      $.each(values, (i, value) => {
-                        console.log(i, value)
-                        $(`#${key}-filter option[value=${value}]`, searchTool.container).prop('selected', true)
-                      })
-                      $(`#${key}-filter option[value=${values}]`, searchTool.container).prop('selected', true)
-                    }
-                    else {
-                      $(`#${key}-filter option[value=${values[0]}]`, searchTool.container).prop('selected', true)
-                    }
-                  }
-                  else {
-                    $(`#${key}-filter option[value=${values}]`, searchTool.container).prop('selected', true)
-                  }
-                })
-
-                $('form', searchTool.container).submit()
-              }
-            }
-            else if (config.placeholderTemplate) {
-              // Show placeholder card on initial load.
-              searchTool.template.resultPlaceholder()
-            }
-            else {
-              // Render all results on initial load.
-              searchTool.template.paginate(data)
-              globalSearchTool = searchTool
-            }
-
-            // Return data for other deferred functions to use.
-            return data
-          }) // $.getScript(scripts.csv).then()
-            .then(function (data) {
-              // After build is finished, run the optional callback.
-              config.callback(data, searchTool)
-
-              // Use select2 for multi-select filters.
-              for (var field in searchTool.flatFilterFields) {
-                if (!searchTool.scripts.select2.loaded && searchTool.flatFilterFields[field].type === 'select' && searchTool.flatFilterFields[field].multi) {
-                  $.getScript(searchTool.scripts.select2.script).done(function () {
-                    // Load select2 css.
-                    $('<link>', {
-                      rel: 'stylesheet',
-                      type: 'text/css',
-                      href: 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css' //'./?a=60483'
-                    }).appendTo('head')
-
-                    // Apply select2 to multi-select inputs.
-                    $('select[multiple]', searchTool.container).select2({ selectionCssClass: 'form-control' })
-
-                    // Make reset button clear select2 inputs.
-                    $('button[type=reset]').addEventListener('click', function () {
-                      $('select[multiple]', searchTool.container).val(null).trigger('change')
-                    })
-
-                    // Flag select2 as loaded to prevent unnecessary requests.
-                    searchTool.scripts.select2.loaded = true
-                  })
-                }
-              }
-
-              // if (multiSelect) {
-              // }
-
-            }) // config.callback()
-        }) // $.when.apply().done()
       }, // initialize
       build: {
         widget: function (uniqueId) {
@@ -1327,6 +1108,234 @@
     }).appendTo('head');
   }
 
+  function renderSearchWidget(searchTool, config, url, container) {
+    // Get all data and merge into a single array.
+    var returnedData = [];
+    returnedData.push($.get(config.dataSources[url].url))
+      // When array of data is ready, merge data and call processes.
+      $.when.apply(this, returnedData).done(function () {
+        // If no data is returned, log an error.
+        if (returnedData.length === 0) {
+          console.error('Search tool error: no data was retrieved.')
+          return
+        }
+
+        var resultData = []
+        if (returnedData.length > 1) {
+          for (var arg in arguments) {
+            var values = arguments[arg][0]
+            resultData.push(values)
+          }
+        }
+        else {
+          resultData.push(arguments[0])
+        }
+
+        $.getScript(searchTool.scripts.csv.script).then(function () {
+          searchTool.scripts.csv.loaded = true
+          var data = []
+          for (var resultSet in resultData) {
+            var dataObject = []
+            // If data is given as a string (e.g. from CSV).
+            if (typeof resultData[resultSet] === 'string') {
+              // Remove empty rows of data.
+              var cleanString = $.csv.parsers.splitLines(resultData[resultSet])
+                .filter(function (line) { return RegExp(/\w/).test(line) })
+                .join('\n')
+              // Convert string data to objects.
+              dataObject = $.csv.toObjects(cleanString)
+            }
+            // If data is an object and results location is given.
+            else if (config.dataSources[resultSet]['results'] && config.dataSources[resultSet]['results'].length) {
+              dataObject = searchTool.helpers.fromString(resultData[resultSet], config.dataSources[resultSet]['results'])
+            }
+            // Otherwise use object data as is.
+            else {
+              dataObject = resultData[resultSet]
+            }
+            // Merge data.
+            $.merge(data, dataObject)
+          }
+
+          // Run additional function from configuration to prepare or select data.
+          data = config.dataCallback(data)
+
+          // Standardise data keys to camel case.
+          data = searchTool.helpers.standardiseKeys(data)
+
+          if (config.maps) {
+            var mapDiv = $('<div id="search-widget-maps"></div>');
+            var searchToolDiv = $('#search-tool');
+            mapDiv.insertBefore(searchToolDiv);
+            $('#search-widget-maps').css("height", "400px");
+
+            for (i = 0; i < leafletCss.length; i ++) {
+              addLeafletCSS(leafletCss[i]);
+            }
+
+            if (!searchTool.scripts.leafletJs.loaded) {
+              $.getScript(searchTool.scripts.leafletJs.script).done(function () {
+                searchTool.scripts.leafletJs.loaded = true
+                if (!searchTool.scripts.leafletMarkerClusterJs.loaded) {
+                  $.getScript(searchTool.scripts.leafletMarkerClusterJs.script).done(function () {
+                    searchTool.scripts.leafletMarkerClusterJs.loaded = true
+                    if (!searchTool.scripts.esriLeafletJs.loaded) {
+                      $.getScript(searchTool.scripts.esriLeafletJs.script).done(function () {
+                        searchTool.scripts.esriLeafletJs.loaded = true
+                        if (!searchTool.scripts.esriLeafletVectorJs.loaded) {
+                          $.getScript(searchTool.scripts.esriLeafletVectorJs.script).done(function () {
+                            searchTool.scripts.esriLeafletVectorJs.loaded = true
+                            if (!searchTool.scripts.leafletTileLayerFallbackJs.loaded) {
+                              $.getScript(searchTool.scripts.leafletTileLayerFallbackJs.script).done(function () {
+                                searchTool.scripts.leafletTileLayerFallbackJs.loaded = true
+                                initMap(data);
+                              })
+                            }
+                          })
+                        }
+                      })
+                    }
+                  })
+                }
+              })
+            }
+          }
+
+          // Add flattened version of filter fields to searchTool.
+          searchTool.flatFilterFields = []
+          searchTool.helpers.flattenFields(config.filterFields, searchTool.flatFilterFields)
+          // Convert string data to arrays if applicable.
+          data = searchTool.helpers.dataStringToArray(data, config.filterFields)
+
+          // Create a unique id for the search widget that gives context.
+          var uniqueId = searchTool.helpers.uniqueId('search-form')
+
+          // Build base search widget.
+          if (!config.hideSearchWidget) {
+            container.append(searchTool.build.widget(uniqueId))
+
+            // Create filter fields.
+            $.each(config.filterFields, function (name, settings) { searchTool.build.filters(data, name, settings) })
+          }
+
+          // Sort data by specified field/s.
+          if (config.sortFields) {
+            data.sort(searchTool.helpers.dynamicSort(config.sortFields))
+          }
+
+          // Add actions to search form buttons.
+          searchTool.actions(data, uniqueId)
+
+          // Add results container.
+          container.append(searchTool.build.results())
+
+          // Add pager and page summary.
+          searchTool.build.pager().insertAfter('.results')
+          searchTool.build.pageSummary().insertBefore('.results')
+
+          if (config.prefilter) {
+            // TODO: can this leverage existing filter logic?
+            if (config.hideSearchWidget) {
+              let filteredItems = []
+              $.each(config.prefilter, (key, values) => {
+                $.each(data, (i, item) => {
+                  let match = true
+
+                  if (!Array.isArray(values)) {
+                    values = [values]
+                  }
+                  $.each(values, (i, value) => {
+                    if (Array.isArray(item[key])) {
+                      if (!item[key].includes(value)) {
+                        match = false
+                      }
+                    }
+                    // else if (value !== item[key]) {
+                    else if (!new RegExp(value,'i').test(item[key])) {
+                      match = false
+                    }
+                  })
+
+                  if (match) {
+                    filteredItems.push(item)
+                  }
+                })
+              })
+
+              searchTool.template.printResults(filteredItems.slice(0,config.pagination.pageSize))
+            }
+            else {
+              $.each(config.prefilter, (key, values) => {
+                // TODO: test if this works for multi-select/multi-values
+                console.log('values', values)
+                if (Array.isArray(values)) {
+                  if (searchTool.flatFilterFields[key].multi) {
+                    $.each(values, (i, value) => {
+                      console.log(i, value)
+                      $(`#${key}-filter option[value=${value}]`, searchTool.container).prop('selected', true)
+                    })
+                    $(`#${key}-filter option[value=${values}]`, searchTool.container).prop('selected', true)
+                  }
+                  else {
+                    $(`#${key}-filter option[value=${values[0]}]`, searchTool.container).prop('selected', true)
+                  }
+                }
+                else {
+                  $(`#${key}-filter option[value=${values}]`, searchTool.container).prop('selected', true)
+                }
+              })
+
+              $('form', searchTool.container).submit()
+            }
+          }
+          else if (config.placeholderTemplate) {
+            // Show placeholder card on initial load.
+            searchTool.template.resultPlaceholder()
+          }
+          else {
+            // Render all results on initial load.
+            searchTool.template.paginate(data)
+            globalSearchTool = searchTool
+          }
+
+          // Return data for other deferred functions to use.
+          return data
+        }) // $.getScript(scripts.csv).then()
+          .then(function (data) {
+            // After build is finished, run the optional callback.
+            config.callback(data, searchTool)
+
+            // Use select2 for multi-select filters.
+            for (var field in searchTool.flatFilterFields) {
+              if (!searchTool.scripts.select2.loaded && searchTool.flatFilterFields[field].type === 'select' && searchTool.flatFilterFields[field].multi) {
+                $.getScript(searchTool.scripts.select2.script).done(function () {
+                  // Load select2 css.
+                  $('<link>', {
+                    rel: 'stylesheet',
+                    type: 'text/css',
+                    href: 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css' //'./?a=60483'
+                  }).appendTo('head')
+
+                  // Apply select2 to multi-select inputs.
+                  $('select[multiple]', searchTool.container).select2({ selectionCssClass: 'form-control' })
+
+                  // Make reset button clear select2 inputs.
+                  $('button[type=reset]').addEventListener('click', function () {
+                    $('select[multiple]', searchTool.container).val(null).trigger('change')
+                  })
+
+                  // Flag select2 as loaded to prevent unnecessary requests.
+                  searchTool.scripts.select2.loaded = true
+                })
+              }
+            }
+
+            // if (multiSelect) {
+            // }
+
+          }) // config.callback()
+      }) // $.when.apply().done()
+  }
 
   // Initialise Leaflet Map
   function initMap(mapsData) {
