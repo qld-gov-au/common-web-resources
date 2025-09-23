@@ -107,16 +107,16 @@ async function checkUrlStatus(url) {
         return false;
     }
     try {
-    const response = await fetch(url);
-    if (response.status === 200) {
-        console.log(`${url} returned a 200 OK status.`);
-        return true;
-    } else {
-        console.error(`${url} returned status: ${response.status}`);
-        return false;
-    }
+        const response = await fetch(url);
+        if (response.status === 200) {
+            console.log(`${url} returned a 200 OK status.`);
+            return true;
+        } else {
+            console.error(`${url} returned status: ${response.status}`);
+            return false;
+        }
     } catch (error) {
-    console.error(`Error checking ${url}:`, error);
-    return false;
+        console.error(`Error checking ${url}:`, error);
+        return false;
     }
 }
