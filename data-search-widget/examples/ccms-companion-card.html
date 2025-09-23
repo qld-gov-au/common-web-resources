@@ -1,0 +1,158 @@
+---
+layout: layout.njk
+---
+<head>
+    <script src="/utils/helpers.js"></script>
+</head>
+
+<body>
+<div class="container">
+    <div id="search-tool"></div>
+</div>
+
+<script type="text/javascript">
+function returnTelephoneNumber(telephone) {
+    returnVal = ''
+    if (telephone != '(blank)' && telephone != 'null') {
+        returnVal = '<p><strong>Phone:</strong> <a href="tel:' + telephone + '">' + telephone + "</a></p>";
+    }
+    return returnVal;
+}
+function returnWebsite(website) {
+    returnVal = ''
+    if (website != '(blank)' && website != 'null') {
+        returnVal += `<p><strong>Website:</strong> <a style="word-wrap: break-word;" href="`;
+        if (website.indexOf("http") < 0) {
+            returnVal += `"http://`
+        }
+        returnVal += website + `">` + website + `</a></p>`
+    }
+    return returnVal;
+}
+function returnTelephoneNumber(telephone) {
+  return '<p><strong>Phone:</strong> <a href="tel:' + telephone + '">' + telephone + "</a></p>";
+}
+function returnAddress(address, suburb, postcode)  {
+    returnVal = '';
+    if (address == '(blank)' || address == 'null') address = '';
+    if (suburb == '(blank)' || suburb == 'null') suburb = '';
+    if (postcode == '(blank)' || postcode == 'null') postcode = '';
+    if ((address != '') || (suburb != '') || (postcode != ''))
+        returnVal = `<p><strong>Address:</strong> ` + address + " " + suburb + " " + postcode + `</p>`
+    return returnVal;
+}
+(function($) {
+    var options = {
+        dataSources: [{
+          //url: 'https://www.data.qld.gov.au/api/3/action/datastore_search?resource_id=5da0fa14-33a2-4046-9f94-f96a90819b15&limit=1000',
+          //url: 'https://staging.data.qld.gov.au/api/3/action/datastore_search?resource_id=5da0fa14-33a2-4046-9f94-f96a90819b15&limit=1000',
+          url: 'https://staging.data.qld.gov.au/api/3/action/datastore_search?resource_id=0e05ef13-1d70-4da7-9429-9057a5b62956&limit=1000',
+          results: 'result.records',
+        }, ],
+        maps: true,
+        keywordFields: [
+          'name',
+          'website',
+          'category',
+          'address',
+          'suburb'
+        ],
+        locationSearch: {
+            enabled: true,
+            label: 'Suburb or postcode',
+            matchFields: {
+                suburb: 'suburb',
+                postcode: 'postcode'
+            },
+            distanceEnabled: true,
+            distanceRadius: {
+                label: 'Distance Around (km)',
+                default: 0,
+                options: ['', 5, 10, 20, 50, 100, 200]
+            }
+        },
+        filterFields: {
+          cardType: {
+            type: 'check',
+            label: 'Card type',
+            multi: true,
+            data: {
+              type: 'array',
+              separator: ','
+            }
+          },
+          category: {
+            type: 'select',
+            label: 'Category',
+            defaultText: 'category',
+            dependents: {
+              businessCategory: {
+                type: 'select',
+                label: 'Subcategory',
+                defaultText: 'subcategory'
+              }
+            }
+          }
+        },
+        /*sortField: [
+          '-year',
+          'agency'
+        ],*/
+        resultTemplate: {
+          data: function (results) {
+            return results.map(function (entry) {
+              // Define and prepare markup for results.
+              //console.log(entry);
+              
+              return {
+                name: entry.name,
+                category: entry.category,
+                website: entry.website,
+                address: entry.address,
+                suburb: entry.suburb,
+                postcode: entry.postcode,
+                telephone: entry.telephonePhone
+              }
+            });        
+          },
+          markup: function (result) {
+            var returnstring = `
+            <div class="col">
+            <div class="qg-card qg-card__light-theme">
+              <div class="content">
+                <div class="details     card-body">
+                  <h3 class="card-title">${result.name}</h3>
+                  <div class="card-text">
+                    <p><strong>Category:</strong> ${result.category}</p>`;
+            returnstring += returnWebsite(`${result.website}`);
+            returnstring += returnAddress(`${result.address}`, `${result.suburb}`, `${result.postcode}`);
+            returnstring += returnTelephoneNumber(`${result.telephone}`);
+            returnstring += `</div>
+            </div>
+            </div> 
+            </div>
+            </div>` 
+            return returnstring;
+          },
+          markerPopupText: function (result) {
+            var returnstring = `${result.name}` +
+                                returnWebsite(`${result.website}`) +
+                                returnAddress(`${result.address}`, `${result.suburb}`, `${result.postcode}`) +
+                                returnTelephoneNumber(`${result.telephonePhone}`);
+            return returnstring;
+          }
+        },
+        noResultsTemplate: function() {
+          return `
+          <div id="no-results" class="col">
+            <h3>We couldn\'t find any matching results.</h3>
+            <p>Try again by removing either keywords, category or by increasing the distance around (km).</p>
+          </div>
+          `
+        },
+      }
+    // Create the search tool inside the target element.
+    var searchTool = $('#search-tool').searchTool(options);
+})(jQuery);
+</script>
+</body>  
