@@ -432,7 +432,7 @@
               // If no default option is specified (undefined, null, empty string, or false), add a placeholder option.
               if (settings.default == null || settings.default === '') {
                 const optionText = settings.defaultText || name,
-                  defaultText = `—Select a${$.inArray(optionText.slice(0, 1), ['a', 'e', 'i', 'o', 'u']) > -1 ? 'n ' : ' '}${optionText}—`,
+                  defaultText = `Select a${$.inArray(optionText.slice(0, 1), ['a', 'e', 'i', 'o', 'u']) > -1 ? 'n ' : ' '}${optionText}`,
                   defaultOption = $('<option selected value>').text(defaultText)
                 select.append(defaultOption)
               }
