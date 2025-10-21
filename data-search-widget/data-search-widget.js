@@ -115,7 +115,7 @@
               var defaultRadius = config.locationSearch?.distanceRadius?.default || ''
           
               radiusOptions.forEach(function (value) {
-                var option = $('<option>').val(value).text(value ? `${value} km` : '— Select distance —')
+                var option = $('<option>').val(value).text(value ? `${value} km` : 'Select distance')
                 if (value == defaultRadius) {
                   option.attr('selected', true)
                 }
