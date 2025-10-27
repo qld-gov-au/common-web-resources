@@ -44,16 +44,12 @@
   display: flex;
   flex-wrap: wrap;
   column-gap: 10px;
-  margin-bottom: 1.5rem;
 }
 .qg-search-widget .location-container fieldset#locationSearch-input {
   flex-grow: 1;
 }
 .qg-search-widget .location-container fieldset#distanceRadius-input {
   flex-grow: 0;
-}
-.qg-search-widget .location-container fieldset#distanceRadius-input select {
-  padding: 0.5em 0.7em;
 }
 
 .page-summary {
@@ -96,10 +92,6 @@
 
 a.leaflet-popup-close-button, .leaflet-control-zoom.leaflet-control a {
   text-decoration: none !important;
-}
-
-#search-widget-maps .leaflet-top, #search-widget-maps .leaflet-bottom {
-  z-index: 500;
 }
 
 /*# sourceMappingURL=data-search-widget.css.map */
