@@ -94,4 +94,8 @@ a.leaflet-popup-close-button, .leaflet-control-zoom.leaflet-control a {
   text-decoration: none !important;
 }
 
+#search-widget-maps {
+  z-index: 0;
+}
+
 /*# sourceMappingURL=data-search-widget.css.map */
