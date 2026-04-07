@@ -109,7 +109,7 @@ async function checkUrlStatus(url) {
     try {
         const response = await fetch(url);
         if (response.status === 200) {
-            console.log(`${url} returned a 200 OK status.`);
+            //console.log(`${url} returned a 200 OK status.`);
             return true;
         } else {
             console.error(`${url} returned status: ${response.status}`);
