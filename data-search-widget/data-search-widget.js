@@ -896,7 +896,7 @@
         standardiseKeys: function (data) {
           return data.map(function (item) {
             for (key in item) {
-              var newKey = searchTool.helpers.toCamelCase(key.trim())
+              var newKey = searchTool.helpers.toCamelCase(key.trim().replaceAll("'", ""))
               if (newKey != key) {
                 item[newKey] = item[key]
                 delete item[key]
