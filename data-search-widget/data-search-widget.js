@@ -1109,7 +1109,17 @@
   }
 
   function leafletCSSClasses(classList) {
-    return classList.join(" ");
+    if (classList.length > 0)
+      return classList.join(" ");
+    else
+      return null;
+  }
+
+  function generateMapHtml() {
+    var mapHtml = '<div id="search-widget-maps"';
+    mapHtml += leafletCSSClasses(config.mapStyles) ? 'class="' + leafletCSSClasses(config.mapStyles) + '"' : '';
+    mapHtml += '></div>';
+    return mapHtml;
   }
 
   function renderSearchWidget(searchTool, config, url, container) {
@@ -1168,9 +1178,7 @@
           data = searchTool.helpers.standardiseKeys(data)
 
           if (config.maps) {
-            var mapHtml = '<div id="search-widget-maps" class="' +
-                           leafletCSSClasses(config.mapStyles) +
-                           '"></div>';
+            var mapHtml = generateMapHtml(config.mapStyles);
             var mapDiv = $(mapHtml);
             var searchToolDiv = $('#search-tool');
             mapDiv.insertBefore(searchToolDiv);
