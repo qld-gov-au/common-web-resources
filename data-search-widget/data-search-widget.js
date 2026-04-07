@@ -1115,9 +1115,9 @@
       return null;
   }
 
-  function generateMapHtml() {
+  function generateMapHtml(mapStyles) {
     var mapHtml = '<div id="search-widget-maps"';
-    mapHtml += leafletCSSClasses(config.mapStyles) ? 'class="' + leafletCSSClasses(config.mapStyles) + '"' : '';
+    mapHtml += leafletCSSClasses(mapStyles) ? 'class="' + leafletCSSClasses(config.mapStyles) + '"' : '';
     mapHtml += '></div>';
     return mapHtml;
   }
