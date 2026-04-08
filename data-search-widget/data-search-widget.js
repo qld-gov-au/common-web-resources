@@ -847,6 +847,7 @@
       helpers: {
         toDashCase: function (str) { return str.replace(/[()]/g, '').replace(/\s/g, '-').toLowerCase(); }, // toDashCase
         toCamelCase: function (str) {
+          str = str.trim().replaceAll("'", "");
           return str
             .replace(/(?:^\w|[A-Z]|\b\w)/g, function (ltr, idx) { return idx === 0 ? ltr.toLowerCase() : ltr.toUpperCase() })
             .replace(/[\W_]+/g, '')
