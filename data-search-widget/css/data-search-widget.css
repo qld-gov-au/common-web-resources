@@ -12,6 +12,9 @@
 .qg-search-widget .search-form fieldset:last-child {
   margin-bottom: 0;
 }
+.qg-search-widget .search-form select + fieldset {
+  margin-top: 1.5rem;
+}
 .qg-search-widget span.select2.select2-container.select2-container--default {
   width: 100% !important;
 }
