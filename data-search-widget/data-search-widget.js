@@ -1110,7 +1110,7 @@
   }
 
   function leafletCSSClasses(classList) {
-    if (classList.length > 0)
+    if (classList && classList.length > 0)
       return classList.join(" ");
     else
       return null;
