@@ -9,7 +9,7 @@
 .qg-search-widget .search-form fieldset {
   margin-bottom: 1.5rem;
 }
-.qg-search-widget .search-form fieldset:last-child {
+.qg-search-widget .search-form fieldset.actions {
   margin-bottom: 0;
 }
 .qg-search-widget .search-form select + fieldset {
@@ -42,6 +42,11 @@
 }
 .qg-search-widget .actions button {
   margin-right: 1rem !important;
+}
+@media screen and (max-width: 450px) {
+  .qg-search-widget .actions button:last-child {
+    margin-top: 1rem;
+  }
 }
 .qg-search-widget .location-container {
   display: flex;
