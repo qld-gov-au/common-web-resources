@@ -1397,6 +1397,17 @@
 
     addMarkers(mapsData);
 
+    map.on('popupopen', function(e) {
+     if ($(window).width() <= 450 ) {
+        $('.leaflet-popup').css("left", function(index, oldValue) {
+            return parseFloat(oldValue) + 50;
+        });
+        $('.leaflet-popup-content').css("width", function(index, oldValue) {
+            return parseFloat(oldValue) - 100;
+        });
+      }
+    });
+
     $('button[type=submit]').on('click', function () {
       includeMobileResults = true;
       // This is to display all the results even if they are missing lat and long
@@ -1415,7 +1426,6 @@
 
   }
   // End of: initMap
-
 
   // Callback function to update the markers when map is moved.
   function mapMoveCallback(event) {
