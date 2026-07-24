@@ -29,9 +29,7 @@ function returnWebsite(website) {
     }
     return returnVal;
 }
-function returnTelephoneNumber(telephone) {
-  return '<p><strong>Phone:</strong> <a href="tel:' + telephone + '">' + telephone + "</a></p>";
-}
+
 function returnAddress(address, suburb, postcode)  {
     returnVal = '';
     if (address == '(blank)' || address == 'null') address = '';
@@ -44,9 +42,9 @@ function returnAddress(address, suburb, postcode)  {
 (function($) {
     var options = {
         dataSources: [{
-          //url: 'https://www.data.qld.gov.au/api/3/action/datastore_search?resource_id=5da0fa14-33a2-4046-9f94-f96a90819b15&limit=1000',
+          url: 'https://www.data.qld.gov.au/api/3/action/datastore_search?resource_id=5da0fa14-33a2-4046-9f94-f96a90819b15&limit=1000',
           //url: 'https://staging.data.qld.gov.au/api/3/action/datastore_search?resource_id=5da0fa14-33a2-4046-9f94-f96a90819b15&limit=1000',
-          url: 'https://staging.data.qld.gov.au/api/3/action/datastore_search?resource_id=0e05ef13-1d70-4da7-9429-9057a5b62956&limit=1000',
+          //url: 'https://staging.data.qld.gov.au/api/3/action/datastore_search?resource_id=0e05ef13-1d70-4da7-9429-9057a5b62956&limit=1000',
           results: 'result.records',
         }, ],
         maps: true,
@@ -111,7 +109,7 @@ function returnAddress(address, suburb, postcode)  {
                 address: entry.address,
                 suburb: entry.suburb,
                 postcode: entry.postcode,
-                telephone: entry.telephonePhone
+                telephone: entry.phoneNo
               }
             });        
           },
