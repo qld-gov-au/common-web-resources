@@ -1462,7 +1462,9 @@
               if (!markers[latlong]) {
                 // add marker to map
                 markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
-                markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item));
+                if (globalConfig.resultTemplate.markerPopupText) {
+                  markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item));
+                }
                 markerClusters.addLayer(markers[latlong]);
                 results.push(item);
               }
@@ -1500,7 +1502,9 @@
           if (!markers[latlong]) {
             // add marker to map
             markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
-            markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item));
+            if (globalConfig.resultTemplate.markerPopupText) {
+              markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item));
+            }
             markerClusters.addLayer(markers[latlong]);
           }
         } catch (error) {

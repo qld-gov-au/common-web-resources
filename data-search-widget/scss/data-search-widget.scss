@@ -10,7 +10,7 @@
   .search-form fieldset {
     margin-bottom: 1.5rem;
 
-    &:last-child {
+    &.actions {
       margin-bottom: 0;
     }
   }
@@ -51,6 +51,11 @@
 
     button {
       margin-right: 1rem !important;
+      @media screen and (max-width: 450px) {
+        &:last-child {
+          margin-top: 1rem;
+        }
+      }
     }
   }
 
