@@ -78,7 +78,7 @@
           if (config.locationSearch?.enabled) {
 
             // Location search text field
-            var locationContainer = $('<div>').addClass('location-container')
+            var locationContainer = $('<fieldset>').addClass('location-container')
             var locationFieldset = $('<fieldset>').attr('id', 'locationSearch-input')
             var locationLabel = $('<label>')
               .attr('for', 'locationSearch-filter')
