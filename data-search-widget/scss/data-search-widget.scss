@@ -7,20 +7,16 @@
     margin-top: 0;
   }
 
-  .search-form {
-    fieldset {
-      > & {
-        margin-bottom: 1.5rem;
-      }
-
-      &:last-child {
-        margin-bottom: 0;
-      }
+ .search-form {
+    > fieldset {
+      margin-bottom: 1.5rem;
     }
-  }
-
-  .search-form select + fieldset {
-      margin-top: 1.5rem;
+    fieldset:last-child {
+      margin-bottom: 0;
+    }
+    select + fieldset {
+        margin-top: 1.5rem;
+    }
   }
 
   span.select2.select2-container.select2-container--default {
