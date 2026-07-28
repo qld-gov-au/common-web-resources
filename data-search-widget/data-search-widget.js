@@ -136,7 +136,7 @@
             form.append(filtersContainer)
           }
 
-          var actions = $('<fieldset>').addClass('actions')
+          var actions = $('<div>').addClass('actions')
           var submit = $('<button type="submit">').addClass('btn btn-primary').text(config.submitLabel)
           var reset = $('<button type="reset">').addClass('btn btn-secondary').text(config.resetLabel)
 
@@ -1463,7 +1463,11 @@
                 // add marker to map
                 markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
                 if (globalConfig.resultTemplate.markerPopupText) {
-                  markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item));
+                  markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item),
+                  {
+                    autoPan: true,
+                    autoPanPadding: [60, 60]
+                  });
                 }
                 markerClusters.addLayer(markers[latlong]);
                 results.push(item);
@@ -1503,7 +1507,11 @@
             // add marker to map
             markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
             if (globalConfig.resultTemplate.markerPopupText) {
-              markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item));
+              markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item),
+              {
+                  autoPan: true,
+                  autoPanPadding: [60, 60]
+              });
             }
             markerClusters.addLayer(markers[latlong]);
           }

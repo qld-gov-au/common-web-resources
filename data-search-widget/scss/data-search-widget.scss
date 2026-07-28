@@ -10,7 +10,7 @@
   .search-form fieldset {
     margin-bottom: 1.5rem;
 
-    &.actions {
+    &:last-child {
       margin-bottom: 0;
     }
   }
