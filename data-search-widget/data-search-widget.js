@@ -1398,13 +1398,16 @@
     addMarkers(mapsData);
 
     map.on('popupopen', function(e) {
-     if ($(window).width() <= 450 ) {
+      if ($(window).width() <= 450 ) {
         $('.leaflet-popup').css("left", function(index, oldValue) {
             return parseFloat(oldValue) + 50;
         });
         $('.leaflet-popup-content').css("width", function(index, oldValue) {
             return parseFloat(oldValue) - 100;
         });
+        var px = map.project(e.target._popup._latlng); // find the pixel location on the map where the popup anchor is
+        px.y -= e.target._popup._container.clientHeight/2; // find the height of the popup container, divide by 2, subtract from the Y axis of marker location
+        map.panTo(map.unproject(px),{animate: true}); // pan to new center
       }
     });
 
@@ -1463,11 +1466,7 @@
                 // add marker to map
                 markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
                 if (globalConfig.resultTemplate.markerPopupText) {
-                  markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item),
-                  {
-                    autoPan: true,
-                    autoPanPadding: [60, 60]
-                  });
+                  markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item));
                 }
                 markerClusters.addLayer(markers[latlong]);
                 results.push(item);
@@ -1507,11 +1506,7 @@
             // add marker to map
             markers[latlong] = L.marker(new L.LatLng(item.latitude, item.longitude));
             if (globalConfig.resultTemplate.markerPopupText) {
-              markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item),
-              {
-                  autoPan: true,
-                  autoPanPadding: [60, 60]
-              });
+              markers[latlong].bindPopup(globalConfig.resultTemplate.markerPopupText(item));
             }
             markerClusters.addLayer(markers[latlong]);
           }
