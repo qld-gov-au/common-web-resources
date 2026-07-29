@@ -6,10 +6,10 @@
   font-size: 1.25rem;
   margin-top: 0;
 }
-.qg-search-widget .search-form fieldset {
+.qg-search-widget .search-form > fieldset {
   margin-bottom: 1.5rem;
 }
-.qg-search-widget .search-form fieldset.actions {
+.qg-search-widget .search-form fieldset:last-child {
   margin-bottom: 0;
 }
 .qg-search-widget .search-form select + fieldset {

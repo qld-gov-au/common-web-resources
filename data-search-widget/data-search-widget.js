@@ -78,7 +78,7 @@
           if (config.locationSearch?.enabled) {
 
             // Location search text field
-            var locationContainer = $('<div>').addClass('location-container')
+            var locationContainer = $('<fieldset>').addClass('location-container')
             var locationFieldset = $('<fieldset>').attr('id', 'locationSearch-input')
             var locationLabel = $('<label>')
               .attr('for', 'locationSearch-filter')
@@ -136,7 +136,7 @@
             form.append(filtersContainer)
           }
 
-          var actions = $('<fieldset>').addClass('actions')
+          var actions = $('<div>').addClass('actions')
           var submit = $('<button type="submit">').addClass('btn btn-primary').text(config.submitLabel)
           var reset = $('<button type="reset">').addClass('btn btn-secondary').text(config.resetLabel)
 
@@ -1398,13 +1398,16 @@
     addMarkers(mapsData);
 
     map.on('popupopen', function(e) {
-     if ($(window).width() <= 450 ) {
+      if ($(window).width() <= 450 ) {
         $('.leaflet-popup').css("left", function(index, oldValue) {
             return parseFloat(oldValue) + 50;
         });
         $('.leaflet-popup-content').css("width", function(index, oldValue) {
             return parseFloat(oldValue) - 100;
         });
+        var px = map.project(e.target._popup._latlng); // find the pixel location on the map where the popup anchor is
+        px.y -= e.target._popup._container.clientHeight/2; // find the height of the popup container, divide by 2, subtract from the Y axis of marker location
+        map.panTo(map.unproject(px),{animate: true}); // pan to new center
       }
     });
 
