@@ -132,7 +132,7 @@
 
           // Build other filter fields
           if (config.filterFields) {
-            var filtersContainer = $('<fieldset>').attr('id', 'filters')
+            var filtersContainer = $('<div>').attr('id', 'filters')
             form.append(filtersContainer)
           }
 
